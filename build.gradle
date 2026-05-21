@@ -39,4 +39,8 @@ dependencies {
 
     // utilisation avec swagger
     implementation("io.quarkus:quarkus-smallrye-openapi")
+
+    // TESTS
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
 }
