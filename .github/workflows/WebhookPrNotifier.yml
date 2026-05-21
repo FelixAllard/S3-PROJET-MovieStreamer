@@ -1,0 +1,83 @@
+name: Discord PR Tracker
+
+on:
+  pull_request:
+    types: [opened, reopened, closed, review_requested, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get PR details + reviews
+        id: pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
+          # Get PR info
+          PR_DATA=$(curl -s \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER)
+
+          # Get reviews
+          REVIEWS=$(curl -s \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews)
+
+          APPROVED=$(echo "$REVIEWS" | jq '[.[] | select(.state=="APPROVED")] | length')
+
+          echo "approved=$APPROVED" >> $GITHUB_OUTPUT
+          echo "title=$(echo $PR_DATA | jq -r .title)" >> $GITHUB_OUTPUT
+          echo "user=$(echo $PR_DATA | jq -r .user.login)" >> $GITHUB_OUTPUT
+          echo "url=$(echo $PR_DATA | jq -r .html_url)" >> $GITHUB_OUTPUT
+          echo "state=$(echo $PR_DATA | jq -r .state)" >> $GITHUB_OUTPUT
+          echo "merged=$(echo $PR_DATA | jq -r .merged)" >> $GITHUB_OUTPUT
+
+      - name: Send Discord message
+        run: |
+          STATE="${{ steps.pr.outputs.state }}"
+          MERGED="${{ steps.pr.outputs.merged }}"
+          APPROVED="${{ steps.pr.outputs.approved }}"
+
+          if [ "$MERGED" == "true" ]; then
+            STATUS="✅ MERGED"
+            COLOR=3066993
+          elif [ "$STATE" == "open" ]; then
+            STATUS="🟡 OPEN"
+            COLOR=16776960
+          else
+            STATUS="🔴 CLOSED"
+            COLOR=15158332
+          fi
+
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{
+            \"embeds\": [{
+              \"title\": \"PR Update: ${{ steps.pr.outputs.title }}\",
+              \"url\": \"${{ steps.pr.outputs.url }}\",
+              \"color\": $COLOR,
+              \"fields\": [
+                {
+                  \"name\": \"Author\",
+                  \"value\": \"${{ steps.pr.outputs.user }}\",
+                  \"inline\": true
+                },
+                {
+                  \"name\": \"Status\",
+                  \"value\": \"$STATUS\",
+                  \"inline\": true
+                },
+                {
+                  \"name\": \"Approvals\",
+                  \"value\": \"$APPROVED\",
+                  \"inline\": true
+                }
+              ]
+            }]
+          }" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
