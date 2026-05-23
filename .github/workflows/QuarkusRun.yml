@@ -33,21 +33,21 @@ jobs:
       - name: Wait for infrastructure
         run: sleep 20
 
-      # 🔥 THIS is your "message.main build"
-      - name: Build message.main (Quarkus app)
-        run: ./gradlew :build -x test
+      # ✅ FIX: remove ":" (not needed)
+      - name: Build Quarkus app
+        run: ./gradlew build -x test
 
-      # 🚀 Start Quarkus app from build output
+      # 🚀 Start app safely
       - name: Start Quarkus application
         run: |
           nohup java -jar build/quarkus-app/quarkus-run.jar > app.log 2>&1 &
           echo $! > app.pid
 
-      # ⏳ Wait until app is REALLY ready
+      # ⏳ Robust readiness check
       - name: Wait for application startup
         run: |
-          for i in {1..40}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8888/q/health/ready)
+          for i in {1..60}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8888/q/health)
 
             if [ "$STATUS" = "200" ]; then
               echo "Application is READY"
