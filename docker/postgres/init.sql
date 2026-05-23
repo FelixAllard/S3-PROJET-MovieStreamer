@@ -37,6 +37,8 @@ SET default_table_access_method = heap;
 -- Name: message; Type: TABLE; Schema: app; Owner: postgres
 --
 
+    -- Removed for now
+/*
 CREATE TABLE app.user (
     id SERIAL PRIMARY KEY,
     name character varying(255) NOT NULL,
@@ -100,7 +102,7 @@ CREATE TABLE app.movie_tag(
     FOREIGN KEY (tag_id) REFERENCES app.tag(id) ON DELETE CASCADE,
     FOREIGN KEY (movie_id) REFERENCES app.movie(id) ON DELETE CASCADE
 );
-ALTER TABLE app.movie_tag OWNER TO postgres;
+ALTER TABLE app.movie_tag OWNER TO postgres;*/
 
 
 
