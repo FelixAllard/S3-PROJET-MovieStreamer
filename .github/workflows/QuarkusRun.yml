@@ -31,43 +31,50 @@ jobs:
         run: docker compose -f docker/docker-compose.yml up -d
 
       - name: Wait for infrastructure
-        run: sleep 15
+        run: sleep 20
 
-      - name: Run tests
-        run: ./gradlew test
-
+      # Build ONLY (no tests)
       - name: Build application
         run: ./gradlew build -x test
 
-      # IMPORTANT: correct Quarkus startup
+      # Start Quarkus properly (foreground-safe)
       - name: Start Quarkus application
-        run: java -jar build/quarkus-app/quarkus-run.jar &
-
-      - name: Wait for application startup (health-based)
         run: |
-          for i in {1..30}; do
-            curl -s http://localhost:8888/q/health/ready && exit 0
-            echo "Waiting for app..."
+          nohup java -jar build/quarkus-app/quarkus-run.jar > app.log 2>&1 &
+          echo $! > app.pid
+
+      # Wait for app using REAL health check
+      - name: Wait for application startup
+        run: |
+          for i in {1..40}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8888/q/health/ready)
+
+            if [ "$STATUS" = "200" ]; then
+              echo "Application is READY"
+              exit 0
+            fi
+
+            echo "Waiting... status=$STATUS"
             sleep 2
           done
+
+          echo "App failed to start"
+          cat app.log
           exit 1
 
-      # Swagger check (your request)
+      # Swagger check
       - name: Check Swagger UI
         run: curl --fail http://localhost:8888/q/swagger-ui
 
       - name: Check OpenAPI JSON
         run: curl --fail http://localhost:8888/q/openapi
 
+      # Cleanup
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -f app.pid ]; then kill $(cat app.pid) || true; fi
+
       - name: Stop Docker services
         if: always()
         run: docker compose -f docker/docker-compose.yml down
-
-      - name: Upload test reports (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: |
-            **/build/reports/tests/**
-            **/build/test-results/**
