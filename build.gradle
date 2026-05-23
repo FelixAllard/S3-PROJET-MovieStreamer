@@ -1,6 +1,8 @@
 plugins {
     id("java")
     id("io.quarkus") version "${quarkusPlatformVersion}"
+    id 'org.jetbrains.kotlin.jvm'
+    id "org.jetbrains.kotlin.plugin.jpa" version '2.3.20'
 }
 
 repositories {
@@ -9,8 +11,6 @@ repositories {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
 }
 
 
@@ -43,4 +43,16 @@ dependencies {
     // TESTS
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
+
+    //Automatic Mapping
+    implementation("io.quarkus:quarkus-hibernate-orm")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    //Panach
+    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+}
+kotlin {
+    jvmToolchain(17)
 }

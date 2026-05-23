@@ -1,8 +1,7 @@
-package ca.usherbrooke.fgen.api.service;
+package ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.service;
 
-import ca.usherbrooke.fgen.api.business.Message;
-import ca.usherbrooke.fgen.api.mapper.MessageMapper;
-import org.apache.ibatis.annotations.Param;
+import ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.Message;
+import ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.mapper.MessageMapper;
 import org.jsoup.parser.Parser;
 
 import jakarta.inject.Inject;
@@ -32,6 +31,10 @@ public class MessageService {
 	) {
 		List<Message> messages = messageMapper.select(trimesterId, profileId, unit, null);
 		return unescapeEntities(messages);
+
+/*
+		Tag tag = new Tag();
+		tag.*/
 	}
 
 

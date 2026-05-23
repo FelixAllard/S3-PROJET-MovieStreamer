@@ -1,4 +1,4 @@
-package ca.usherbrooke.fgen.api.business;
+package ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business;
 
 public final class Roles {
     private Roles() { }

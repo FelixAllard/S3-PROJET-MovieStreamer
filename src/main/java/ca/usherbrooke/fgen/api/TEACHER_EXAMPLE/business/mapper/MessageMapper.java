@@ -1,7 +1,7 @@
-package ca.usherbrooke.fgen.api.mapper;
+package ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.mapper;
 
 
-import ca.usherbrooke.fgen.api.business.Message;
+import ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.Message;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
