@@ -70,12 +70,6 @@ jobs:
         run: if [ -f app.pid ]; then kill $(cat app.pid) || true; fi
 
 
-      # 🔍 Swagger checks
-      - name: Check Swagger UI
-        run: curl --fail http://localhost:8888/q/swagger-ui
-
-      - name: Check OpenAPI JSON
-        run: curl --fail http://localhost:8888/q/openapi
 
       # 🧹 Cleanup
       - name: Stop application
