@@ -3,7 +3,7 @@ package ca.usherbrooke.fgen.api.Data;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
-@QuarkusTest
+
 public class MovieDataTest {
 
     @Test

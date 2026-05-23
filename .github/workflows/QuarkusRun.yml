@@ -24,11 +24,36 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Check Docker
+        run: docker --version
+
+      - name: Start infrastructure (Docker Compose)
+        run: docker compose -f docker/docker-compose.yml up -d
+
+      - name: Wait for services to be ready
+        run: sleep 15
 
       - name: Run tests
         run: ./gradlew test
+
+      - name: Build application
+        run: ./gradlew build
+
+      - name: Start Quarkus application
+        run: ./gradlew run &
+
+      - name: Wait for application startup
+        run: sleep 20
+
+      - name: Health check (live endpoint)
+        run: curl --fail http://localhost:8888/q/health
+
+      - name: Health check (ready endpoint)
+        run: curl --fail http://localhost:8888/q/health/ready
+
+      - name: Stop Docker services
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down
 
       - name: Upload test reports (on failure)
         if: failure()
