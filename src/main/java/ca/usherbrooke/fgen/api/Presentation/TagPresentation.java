@@ -1,6 +1,6 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
-import ca.usherbrooke.fgen.api.Buisness.TagBuisness;
+import ca.usherbrooke.fgen.api.Business.TagBusiness;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -10,18 +10,18 @@ import jakarta.ws.rs.Path;
 @Path("/public/tag")
 public class TagPresentation {
 
-    private final TagBuisness tagBuisness;
+    private final TagBusiness tagBusiness;
 
     @Inject
-    public TagPresentation(TagBuisness tagBuisness) {
-        this.tagBuisness = tagBuisness;
+    public TagPresentation(TagBusiness tagBusiness) {
+        this.tagBusiness = tagBusiness;
     }
 
 
     @GET()
     @Path("ping")
     public String ping() {
-        return tagBuisness.ping();
+        return tagBusiness.ping();
     }
 
 }

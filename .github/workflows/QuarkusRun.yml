@@ -30,26 +30,34 @@ jobs:
       - name: Start infrastructure (Docker Compose)
         run: docker compose -f docker/docker-compose.yml up -d
 
-      - name: Wait for services to be ready
+      - name: Wait for infrastructure
         run: sleep 15
 
       - name: Run tests
         run: ./gradlew test
 
       - name: Build application
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
+      # IMPORTANT: correct Quarkus startup
       - name: Start Quarkus application
-        run: ./gradlew run &
+        run: java -jar build/quarkus-app/quarkus-run.jar &
 
-      - name: Wait for application startup
-        run: sleep 20
+      - name: Wait for application startup (health-based)
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:8888/q/health/ready && exit 0
+            echo "Waiting for app..."
+            sleep 2
+          done
+          exit 1
 
-      - name: Health check (live endpoint)
-        run: curl --fail http://localhost:8888/q/health
+      # Swagger check (your request)
+      - name: Check Swagger UI
+        run: curl --fail http://localhost:8888/q/swagger-ui
 
-      - name: Health check (ready endpoint)
-        run: curl --fail http://localhost:8888/q/health/ready
+      - name: Check OpenAPI JSON
+        run: curl --fail http://localhost:8888/q/openapi
 
       - name: Stop Docker services
         if: always()

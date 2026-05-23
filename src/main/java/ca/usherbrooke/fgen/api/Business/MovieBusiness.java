@@ -1,16 +1,16 @@
-package ca.usherbrooke.fgen.api.Buisness;
+package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.MovieData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 @ApplicationScoped
-public class MovieBuisness {
+public class MovieBusiness {
     private final MovieData movieData;
 
 
     @Inject
-    public MovieBuisness(MovieData movieData) {
+    public MovieBusiness(MovieData movieData) {
         this.movieData = movieData;
     }
 

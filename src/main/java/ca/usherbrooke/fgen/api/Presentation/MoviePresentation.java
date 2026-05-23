@@ -1,6 +1,6 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
-import ca.usherbrooke.fgen.api.Buisness.MovieBuisness;
+import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -11,11 +11,11 @@ import jakarta.ws.rs.Path;
 @Path("/public/movie")
 public class MoviePresentation {
 
-    private final MovieBuisness movieBuisness;
+    private final MovieBusiness movieBusiness;
 
     @Inject
-    public MoviePresentation(MovieBuisness movieBuisness) {
-        this.movieBuisness = movieBuisness;
+    public MoviePresentation(MovieBusiness movieBusiness) {
+        this.movieBusiness = movieBusiness;
     }
 
 
@@ -23,7 +23,7 @@ public class MoviePresentation {
     @Path("ping")
     public String ping() {
 
-        return movieBuisness.ping();
+        return movieBusiness.ping();
     }
 
 }

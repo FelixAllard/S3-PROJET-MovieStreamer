@@ -1,14 +1,13 @@
-package ca.usherbrooke.fgen.api.buisiness;
+package ca.usherbrooke.fgen.api.business;
 
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
 
-public class MovieBuisnessTest {
+public class UserBusinessTest {
     @Test
     public void Test(){
         System.out.println("=================================");
-        System.out.println(" MOVIE BUISNESS TEST START ");
+        System.out.println(" USER BUISNESS TEST START ");
         System.out.println("=================================");
     }
 }
