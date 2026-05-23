@@ -1,7 +1,7 @@
-package ca.usherbrooke.fgen.api.service;
+package ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.service;
 
-import ca.usherbrooke.fgen.api.business.Person;
-import ca.usherbrooke.fgen.api.business.Roles;
+import ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.Person;
+import ca.usherbrooke.fgen.api.TEACHER_EXAMPLE.business.Roles;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import jakarta.annotation.security.RolesAllowed;
