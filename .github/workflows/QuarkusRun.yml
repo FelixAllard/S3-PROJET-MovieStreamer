@@ -43,6 +43,32 @@ jobs:
           nohup java -jar build/quarkus-app/quarkus-run.jar > app.log 2>&1 &
           echo $! > app.pid
 
+      - name: Start Quarkus application
+        run: |
+          ./gradlew quarkusDev > app.log 2>&1 &
+          echo $! > app.pid
+          
+          # Wait for application to be ready
+          for i in {1..40}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8888/q/health || echo "000")
+          
+            if [ "$STATUS" = "200" ]; then
+              echo "Application is READY"
+              exit 0
+            fi
+          
+            echo "Waiting... status=$STATUS"
+            sleep 3
+          done
+          
+          echo "App failed to start"
+          cat app.log
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: if [ -f app.pid ]; then kill $(cat app.pid) || true; fi
+
       # ⏳ Robust readiness check
       - name: Wait for application startup
         run: |
