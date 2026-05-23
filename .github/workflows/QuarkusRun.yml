@@ -33,17 +33,17 @@ jobs:
       - name: Wait for infrastructure
         run: sleep 20
 
-      # Build ONLY (no tests)
-      - name: Build application
-        run: ./gradlew build -x test
+      # 🔥 THIS is your "message.main build"
+      - name: Build message.main (Quarkus app)
+        run: ./gradlew :build -x test
 
-      # Start Quarkus properly (foreground-safe)
+      # 🚀 Start Quarkus app from build output
       - name: Start Quarkus application
         run: |
           nohup java -jar build/quarkus-app/quarkus-run.jar > app.log 2>&1 &
           echo $! > app.pid
 
-      # Wait for app using REAL health check
+      # ⏳ Wait until app is REALLY ready
       - name: Wait for application startup
         run: |
           for i in {1..40}; do
@@ -55,21 +55,21 @@ jobs:
             fi
 
             echo "Waiting... status=$STATUS"
-            sleep 2
+            sleep 3
           done
 
           echo "App failed to start"
           cat app.log
           exit 1
 
-      # Swagger check
+      # 🔍 Swagger checks
       - name: Check Swagger UI
         run: curl --fail http://localhost:8888/q/swagger-ui
 
       - name: Check OpenAPI JSON
         run: curl --fail http://localhost:8888/q/openapi
 
-      # Cleanup
+      # 🧹 Cleanup
       - name: Stop application
         if: always()
         run: |
