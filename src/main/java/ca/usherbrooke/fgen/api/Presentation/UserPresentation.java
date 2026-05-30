@@ -9,6 +9,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -30,9 +31,11 @@ public class UserPresentation {
         return userBusiness.ping();
     }
 
-    @GET()
+    @GET
     @Path("all")
-    public List<User> getAllUsers(){
-        return userBusiness.getAllUsers();
+    public Response getAllUsers() {
+        List<User> users = userBusiness.getAllUsers();
+        return Response.ok(users).build();
+
     }
 }

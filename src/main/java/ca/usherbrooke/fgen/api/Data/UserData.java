@@ -19,7 +19,6 @@ public class UserData {
         this.userRepository = userRepository;
     }
 
-
     //@Transactional NEEDED TO MODIFY DATABASE
 
     public String ping() {

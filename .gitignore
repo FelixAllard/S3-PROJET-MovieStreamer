@@ -41,3 +41,6 @@
 /.idea/S3-PROJET-MovieStreamer.iml
 /.idea/libraries/schema.xml
 /.idea/vcs.xml
+.gradle/
+/gradle/
+/.gradle/
