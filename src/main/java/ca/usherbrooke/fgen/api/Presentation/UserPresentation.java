@@ -36,6 +36,5 @@ public class UserPresentation {
     public Response getAllUsers() {
         List<User> users = userBusiness.getAllUsers();
         return Response.ok(users).build();
-
     }
 }
