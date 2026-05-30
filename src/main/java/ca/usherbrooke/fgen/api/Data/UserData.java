@@ -20,9 +20,7 @@ public class UserData {
     }
 
     //@Transactional NEEDED TO MODIFY DATABASE
-
     public String ping() {
-
         return "pong!";
     }
 
