@@ -1,7 +1,12 @@
 package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.UserRepository;
+import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+
+import java.util.ArrayList;
 
 @ApplicationScoped
 public class UserData {
@@ -11,7 +16,11 @@ public class UserData {
         this.userRepository = userRepository;
     }
 
-    public String ping(){
+
+    //@Transactional NEEDED TO MODIFY DATABASE
+
+    public String ping() {
+
         return "pong!";
     }
 
