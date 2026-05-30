@@ -18,7 +18,7 @@ public class UserPresentation {
     @GET()
     @Path("ping")
     public String ping() {
-        return "Pong";
+        return userBusiness.ping();
     }
 
 }
