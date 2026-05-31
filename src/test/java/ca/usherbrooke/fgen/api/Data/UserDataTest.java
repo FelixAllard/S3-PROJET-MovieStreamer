@@ -1,36 +1,47 @@
 package ca.usherbrooke.fgen.api.Data;
 
+import ca.usherbrooke.fgen.api.DAO.UserRepository;
 import ca.usherbrooke.fgen.api.Entities.User;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@QuarkusTest
 public class UserDataTest {
 
+    private UserRepository userRepository;
+    private UserData userData;
 
-    @Inject
-    UserData userData;
+    @BeforeEach
+    void setUp() {
+        userRepository = Mockito.mock(UserRepository.class);
+        userData = new UserData(userRepository);
+    }
 
     @Test
-    public void testGetAllUsers() {
-        System.out.println("=================================");
-        System.out.println(" TEST SANS MOCK : Vraie base de données ");
-        System.out.println("=================================");
+    void getAllUsers_delegueAuRepositoryEtRetourneListe() {
+        User u1 = new User();
+        User u2 = new User();
+        when(userRepository.listAll()).thenReturn(List.of(u1, u2));
 
+        List<User> result = userData.getAllUsers();
 
-        List<User> resultat = userData.getAllUsers();
-        assertNotNull(resultat, "La liste ne doit pas être nulle");
+        assertEquals(2, result.size());
+        verify(userRepository, times(1)).listAll();
+    }
 
+    @Test
+    void getAllUsers_retourneListeVideSiRepositoryVide() {
+        when(userRepository.listAll()).thenReturn(List.of());
 
-        assertEquals(5, resultat.size(), "Il devrait y avoir 5 utilisateurs dans la base de données");
+        List<User> result = userData.getAllUsers();
 
-        System.out.println(" TEST RÉUSSI ✅ ");
-        System.out.println("=================================");
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(userRepository, times(1)).listAll();
     }
 }

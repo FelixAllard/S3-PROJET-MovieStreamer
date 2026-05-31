@@ -52,6 +52,8 @@ dependencies {
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    //mockito
+    testImplementation("io.quarkus:quarkus-junit5-mockito")
 }
 kotlin {
     jvmToolchain(17)

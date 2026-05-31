@@ -1,38 +1,48 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
+import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Entities.User;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@QuarkusTest
 public class UserPresentationTest {
 
-    @Inject
-    UserPresentation userPresentation;
+    private UserBusiness userBusiness;
+    private UserPresentation userPresentation;
+
+    @BeforeEach
+    void setUp() {
+        userBusiness = Mockito.mock(UserBusiness.class);
+        userPresentation = new UserPresentation(userBusiness);
+    }
 
     @Test
-    public void testGetAllUsers() {
-        System.out.println("=================================");
-        System.out.println(" TEST PRESENTATION : Vraie base de données ");
-        System.out.println("=================================");
+    void getAllUsers_retourneStatus200AvecListeUtilisateurs() {
+        User u1 = new User();
+        User u2 = new User();
+        when(userBusiness.getAllUsers()).thenReturn(List.of(u1, u2));
 
-        Response reponse = userPresentation.getAllUsers();
+        Response response = userPresentation.getAllUsers();
 
-        assertEquals(200, reponse.getStatus(), "Le statut HTTP devrait être 200 (OK)");
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(List.of(u1, u2), response.getEntity());
+        verify(userBusiness, times(1)).getAllUsers();
+    }
 
-        List<User> resultat = (List<User>) reponse.getEntity();
+    @Test
+    void getAllUsers_retourneStatus200AvecListeVide() {
+        when(userBusiness.getAllUsers()).thenReturn(List.of());
 
-        assertNotNull(resultat, "La liste contenue dans la réponse ne doit pas être nulle");
-        assertEquals(5, resultat.size(), "Le serveur devrait servir une liste de 5 utilisateurs");
+        Response response = userPresentation.getAllUsers();
 
-        System.out.println(" TEST PRESENTATION RÉUSSI ✅ ");
-        System.out.println("=================================");
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertTrue(((List<?>) response.getEntity()).isEmpty());
     }
 }

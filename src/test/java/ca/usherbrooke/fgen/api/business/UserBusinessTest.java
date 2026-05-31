@@ -1,34 +1,48 @@
 package ca.usherbrooke.fgen.api.business;
 
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
+import ca.usherbrooke.fgen.api.Data.UserData;
 import ca.usherbrooke.fgen.api.Entities.User;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@QuarkusTest
 public class UserBusinessTest {
 
-    @Inject
-    UserBusiness userBusiness;
+    private UserData userData;
+    private UserBusiness userBusiness;
+
+    @BeforeEach
+    void setUp() {
+        userData = Mockito.mock(UserData.class);
+        userBusiness = new UserBusiness(userData);
+    }
 
     @Test
-    public void testGetAllUsers() {
-        System.out.println("=================================");
-        System.out.println(" TEST BUSINESS : Vraie base de données ");
-        System.out.println("=================================");
+    void getAllUsers_delegueAUserDataEtRetourneListe() {
+        User u1 = new User();
+        User u2 = new User();
+        when(userData.getAllUsers()).thenReturn(List.of(u1, u2));
 
-        List<User> resultat = userBusiness.getAllUsers();
+        List<User> result = userBusiness.getAllUsers();
 
-        assertNotNull(resultat, "La liste ne doit pas être nulle");
-        assertEquals(5, resultat.size(), "Le chef cuisinier devrait renvoyer les 5 utilisateurs de import.sql");
+        assertEquals(2, result.size());
+        verify(userData, times(1)).getAllUsers();
+    }
 
-        System.out.println(" TEST BUSINESS RÉUSSI ✅ ");
-        System.out.println("=================================");
+    @Test
+    void getAllUsers_retourneListeVideSiAucunUtilisateur() {
+        when(userData.getAllUsers()).thenReturn(List.of());
+
+        List<User> result = userBusiness.getAllUsers();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(userData, times(1)).getAllUsers();
     }
 }
