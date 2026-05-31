@@ -1,15 +1,48 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
-
-import io.quarkus.test.junit.QuarkusTest;
+import ca.usherbrooke.fgen.api.Business.UserBusiness;
+import ca.usherbrooke.fgen.api.Entities.User;
+import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class UserPresentationTest {
+
+    private UserBusiness userBusiness;
+    private UserPresentation userPresentation;
+
+    @BeforeEach
+    void setUp() {
+        userBusiness = Mockito.mock(UserBusiness.class);
+        userPresentation = new UserPresentation(userBusiness);
+    }
+
     @Test
-    public void Test(){
-        System.out.println("=================================");
-        System.out.println(" USER PRESENTATION TEST START ");
-        System.out.println("=================================");
+    void getAllUsers_retourneStatus200AvecListeUtilisateurs() {
+        User u1 = new User();
+        User u2 = new User();
+        when(userBusiness.getAllUsers()).thenReturn(List.of(u1, u2));
+
+        Response response = userPresentation.getAllUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(List.of(u1, u2), response.getEntity());
+        verify(userBusiness, times(1)).getAllUsers();
+    }
+
+    @Test
+    void getAllUsers_retourneStatus200AvecListeVide() {
+        when(userBusiness.getAllUsers()).thenReturn(List.of());
+
+        Response response = userPresentation.getAllUsers();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertTrue(((List<?>) response.getEntity()).isEmpty());
     }
 }
