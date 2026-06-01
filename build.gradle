@@ -1,8 +1,8 @@
 plugins {
-    id("java")
-    id("io.quarkus") version "${quarkusPlatformVersion}"
+    id 'java'
+    id 'io.quarkus' version "${quarkusPlatformVersion}"
     id 'org.jetbrains.kotlin.jvm'
-    id "org.jetbrains.kotlin.plugin.jpa" version '2.3.20'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '2.3.20'
 }
 
 repositories {
@@ -13,13 +13,12 @@ repositories {
 java {
 }
 
-
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
 
     // Sécurité / OIDC
-    implementation("io.quarkus:quarkus-oidc")
-    implementation("io.quarkus:quarkus-security")
+    implementation 'io.quarkus:quarkus-oidc'
+    implementation 'io.quarkus:quarkus-security'
 
     // Client REST
     implementation 'io.quarkus:quarkus-rest'
@@ -29,32 +28,36 @@ dependencies {
     testImplementation 'io.rest-assured:rest-assured'
 
     // MyBatis
-    implementation("io.quarkiverse.mybatis:quarkus-mybatis:$quarkusMybatisVersion")
+    implementation "io.quarkiverse.mybatis:quarkus-mybatis:$quarkusMybatisVersion"
 
     // JDBC (PostgreSQL ou autre)
-    implementation("io.quarkus:quarkus-jdbc-postgresql") // adapte selon ton SGBD
+    implementation 'io.quarkus:quarkus-jdbc-postgresql' // adapte selon ton SGBD
 
     // https://mvnrepository.com/artifact/org.jsoup/jsoup
-    implementation("org.jsoup:jsoup:1.20.1")
+    implementation 'org.jsoup:jsoup:1.20.1'
 
     // utilisation avec swagger
-    implementation("io.quarkus:quarkus-smallrye-openapi")
+    implementation 'io.quarkus:quarkus-smallrye-openapi'
 
     // TESTS
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
 
     //Automatic Mapping
-    implementation("io.quarkus:quarkus-hibernate-orm")
-    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation 'io.quarkus:quarkus-hibernate-orm'
+    implementation 'io.quarkus:quarkus-jdbc-postgresql'
+
     //Panach
-    implementation("io.quarkus:quarkus-hibernate-orm-panache")
-    implementation("io.quarkus:quarkus-jdbc-postgresql")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation 'io.quarkus:quarkus-hibernate-orm-panache'
+    implementation 'io.quarkus:quarkus-jdbc-postgresql'
+
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+
     //mockito
-    testImplementation("io.quarkus:quarkus-junit5-mockito")
+    testImplementation 'io.quarkus:quarkus-junit5-mockito'
 }
+
 kotlin {
     jvmToolchain(17)
 }

@@ -1,8 +1,11 @@
 package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.MovieData;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.List;
 
 @ApplicationScoped
 public class MovieBusiness {
@@ -19,4 +22,7 @@ public class MovieBusiness {
         return movieData.ping();
     }
 
+    public List<Movie> getAllMovies(){
+        return movieData.getAllMovies();
+    }
 }

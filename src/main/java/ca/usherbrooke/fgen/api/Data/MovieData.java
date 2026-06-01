@@ -2,7 +2,10 @@ package ca.usherbrooke.fgen.api.Data;
 
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.util.List;
 
 @ApplicationScoped
 public class MovieData {
@@ -14,6 +17,9 @@ public class MovieData {
 
     public String ping(){
         return "pong!";
+    }
 
+    public List<Movie> getAllMovies(){
+        return movieRepository.listAll();
     }
 }
