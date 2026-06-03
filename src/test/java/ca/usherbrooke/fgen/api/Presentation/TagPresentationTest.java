@@ -26,7 +26,7 @@ public class TagPresentationTest {
     }
 
     @Test
-    void getAllMovies_retourneStatus200AvecListeFilms() {
+    void getAllTags_retourneStatus200AvecListeFilms() {
         // Arrange
         Tag m1 = new Tag();
         Tag m2 = new Tag();
@@ -42,7 +42,7 @@ public class TagPresentationTest {
     }
 
     @Test
-    void getAllMovies_retourneStatus200AvecListeVide() {
+    void getAllTags_retourneStatus200AvecListeVide() {
         // Arrange
         when(tagBusiness.getAllTags()).thenReturn(List.of());
 

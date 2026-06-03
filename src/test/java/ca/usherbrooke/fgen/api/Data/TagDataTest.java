@@ -39,7 +39,7 @@ public class TagDataTest {
     }
 
     @Test
-    void getAllMovies_retourneListeVideSiRepositoryVide() {
+    void getAllTags_retourneListeVideSiRepositoryVide() {
         // Arrange
         when(tagRepository.listAll()).thenReturn(List.of());
 
