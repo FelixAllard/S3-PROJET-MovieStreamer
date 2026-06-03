@@ -3,7 +3,6 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Tag;
-import ca.usherbrooke.fgen.api.Entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
