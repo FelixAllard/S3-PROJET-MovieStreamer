@@ -2,9 +2,12 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Tag;
+import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -18,8 +21,10 @@ public class TagData {
 
     @Transactional
     public Tag postTag(Tag tag) {
+        //On god jvais changer tous les count par un UNIQUE
         if (tagRepository.count("name", tag.name) > 0)
-            throw new WebApplicationException("Tag déjà existant.", 409);
+            ExceptionUtils.throwException(409, "Tag Name Already Exists");
+
         tagRepository.persist(tag);
         return tag;
     }
@@ -40,12 +45,13 @@ public class TagData {
     @Transactional
     public Tag updateTagByTagId(int id, Tag updatedTag) {
         Tag tag = tagRepository.findById(id);
-        if(tag==null)
-            throw new WebApplicationException("N'existe Pas", 404);
+        if (tag==null)
+            ExceptionUtils.throwException(404, "Tag Not Found");
+        if (tagRepository.count("name", updatedTag.name) > 0)
+            ExceptionUtils.throwException(409, "Tag Name Already Exists");
 
-        if (tagRepository.count("name", tag.name) > 0)
-            throw new WebApplicationException("Tag déjà existant.", 409);
         tag.setName(updatedTag.name);
+
         return tag;
     }
 
