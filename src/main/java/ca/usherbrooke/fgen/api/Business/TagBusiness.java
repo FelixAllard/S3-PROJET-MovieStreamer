@@ -24,7 +24,8 @@ public class TagBusiness {
     }
 
     public Tag postTag(Tag tag) {
-        if(tag.name.isEmpty() || tag.name.length() < 1 || tag.name == null) {throw new WebApplicationException("Name is NULL or empty.", 400);}
+        if(tag.name == null) {throw new WebApplicationException("Name is NULL.", 400);}
+        if(tag.name.isEmpty()) {throw new WebApplicationException("Name is empty.", 400);}
         return tagData.postTag(tag);
     }
 
