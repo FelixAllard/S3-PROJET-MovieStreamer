@@ -1,8 +1,8 @@
 package ca.usherbrooke.fgen.api.Data;
 
-
 import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class TagData {
@@ -12,9 +12,14 @@ public class TagData {
         this.tagRepository = tagRepository;
     }
 
-
     public String ping(){
         return "pong!";
+    }
+
+    @Transactional
+    public boolean deleteTagByTagId(int id) {
+        tagRepository.deleteMovieTagLinksByTagId(id);
+        return tagRepository.deleteById(id);
     }
 
 }

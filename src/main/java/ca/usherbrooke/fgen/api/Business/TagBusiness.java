@@ -8,15 +8,17 @@ import jakarta.inject.Inject;
 public class TagBusiness {
     private final TagData tagData;
 
-
     @Inject
     public TagBusiness(TagData tagData) {
         this.tagData = tagData;
     }
 
-
     public String ping() {
         return tagData.ping();
+    }
+
+    public boolean deleteTagByTagId(int id) {
+        return tagData.deleteTagByTagId(id);
     }
 
 }
