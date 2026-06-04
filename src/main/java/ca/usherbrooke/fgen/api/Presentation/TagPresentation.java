@@ -8,6 +8,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
+import java.util.List;
+import jakarta.ws.rs.PathParam;
 
 @Path("/public/tag")
 public class TagPresentation {
@@ -18,7 +20,6 @@ public class TagPresentation {
     public TagPresentation(TagBusiness tagBusiness) {
         this.tagBusiness = tagBusiness;
     }
-
 
     @GET()
     @Path("ping")
@@ -35,5 +36,22 @@ public class TagPresentation {
     public Response postTag(Tag tag) {
         Tag created = tagBusiness.postTag(tag);
         return Response.status(Response.Status.CREATED).entity(created).build();
+    @GET
+    @Path("all")
+    public Response getAllTags() {
+        List<Tag> tags = tagBusiness.getAllTags();
+        return Response.ok(tags).build();
+    }
+      
+    @DELETE
+    @Path("{id}")
+    public Response deleteTagByTagId(@PathParam("id") int id) {
+        boolean isDeleted = tagBusiness.deleteTagByTagId(id);
+
+        if (isDeleted) {
+            return Response.noContent().build();
+        }
+
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 }

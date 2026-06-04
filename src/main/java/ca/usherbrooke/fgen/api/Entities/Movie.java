@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Entities;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -13,8 +14,16 @@ public class Movie {
     public Long id;
     public String title;
     public String description;
-    @ElementCollection
-    public List<Long> tagIds;
+
+    @ManyToMany
+    @JoinTable(
+            name = "movie_tags",
+            schema = "app",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    public List<Tag> tags = new ArrayList<>();
+
     public int year;
     public float movieLength;
 

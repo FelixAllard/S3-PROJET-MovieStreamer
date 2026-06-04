@@ -6,16 +6,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
+import java.util.List;
+
 @ApplicationScoped
 public class TagBusiness {
     private final TagData tagData;
-
 
     @Inject
     public TagBusiness(TagData tagData) {
         this.tagData = tagData;
     }
-
 
     public String ping() {
         return tagData.ping();
@@ -27,4 +27,13 @@ public class TagBusiness {
         }
         return tagData.postTag(tag);
     }
+}
+    public List<Tag> getAllTags(){
+        return tagData.getAllTags();
+    }
+
+    public boolean deleteTagByTagId(int id) {
+        return tagData.deleteTagByTagId(id);
+    }
+
 }

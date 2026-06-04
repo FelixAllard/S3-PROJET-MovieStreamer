@@ -2,12 +2,8 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.UserRepository;
 import ca.usherbrooke.fgen.api.Entities.User;
-import ca.usherbrooke.fgen.api.Entities.User;
-import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
-import java.util.ArrayList;
 
 import java.util.List;
 

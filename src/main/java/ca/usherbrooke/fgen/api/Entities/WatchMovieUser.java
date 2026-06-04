@@ -1,5 +1,6 @@
 package ca.usherbrooke.fgen.api.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,9 +12,12 @@ public class WatchMovieUser {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties("watchedMovies")
     public User user;
 
-    public Long movieId;
+    @ManyToOne
+    @JoinColumn(name = "movie_id", nullable = false)
+    public Movie movie;
 
     @Enumerated(EnumType.STRING)
     public MovieStatus status;

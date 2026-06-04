@@ -1,6 +1,5 @@
 package ca.usherbrooke.fgen.api.Business;
 
-
 import ca.usherbrooke.fgen.api.Data.UserData;
 import ca.usherbrooke.fgen.api.Entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
