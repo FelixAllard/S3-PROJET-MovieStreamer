@@ -51,4 +51,26 @@ public class TagDataTest {
         assertTrue(result.isEmpty());
         verify(tagRepository, times(1)).listAll();
     }
+
+    @Test
+    void deleteTagByTagId_delegueAuRepositoryEtRetourneTrue() {
+        when(tagRepository.deleteById(1)).thenReturn(true);
+
+        boolean result = tagData.deleteTagByTagId(1);
+
+        assertTrue(result);
+        verify(tagRepository, times(1)).deleteMovieTagLinksByTagId(1);
+        verify(tagRepository, times(1)).deleteById(1);
+    }
+
+    @Test
+    void deleteTagByTagId_retourneFalseSiRepositoryNeSupprimeRien() {
+        when(tagRepository.deleteById(99)).thenReturn(false);
+
+        boolean result = tagData.deleteTagByTagId(99);
+
+        assertFalse(result);
+        verify(tagRepository, times(1)).deleteMovieTagLinksByTagId(99);
+        verify(tagRepository, times(1)).deleteById(99);
+    }
 }

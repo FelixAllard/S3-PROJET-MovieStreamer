@@ -25,3 +25,8 @@ public class TagBusiness {
     }
 
 }
+    public boolean deleteTagByTagId(int id) {
+        return tagData.deleteTagByTagId(id);
+    }
+
+}
