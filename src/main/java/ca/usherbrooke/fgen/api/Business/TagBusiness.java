@@ -27,7 +27,7 @@ public class TagBusiness {
         }
         return tagData.postTag(tag);
     }
-}
+    
     public List<Tag> getAllTags(){
         return tagData.getAllTags();
     }
