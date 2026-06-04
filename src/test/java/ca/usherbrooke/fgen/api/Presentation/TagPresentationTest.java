@@ -1,18 +1,12 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
-
 import ca.usherbrooke.fgen.api.Business.TagBusiness;
 import ca.usherbrooke.fgen.api.Entities.Tag;
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.List;
 
@@ -35,7 +29,7 @@ public class TagPresentationTest {
     }
 
     @Test
-    void getAllTags_retourneStatus200AvecListeFilms() {
+    void getAllTags_retourneStatus200AvecListeTags() {
         // Arrange
         Tag m1 = new Tag();
         Tag m2 = new Tag();
@@ -84,6 +78,31 @@ public class TagPresentationTest {
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         verify(tagBusiness, times(1)).deleteTagByTagId(99);
     }
+
+    @Test
+    void updateTagByTagId_retourneStatus204SiTagUpdated()
+    {
+        //Arrange
+        Tag existingTag = new Tag();
+        existingTag.id = 1;
+        existingTag.name = "Action";
+
+        Tag newTag = new Tag();
+        newTag.name = "Horreur";
+
+        when(tagBusiness.updateTagByTagId(1, newTag)).thenReturn(newTag);
+
+        // Act
+        Response response = tagPresentation.updateTagByTagId(1, newTag);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(newTag, response.getEntity());
+        verify(tagBusiness, times(1)).updateTagByTagId(1, newTag);
+    }
+
+
+
 
     @Test
     void postTag_positiveTest() {

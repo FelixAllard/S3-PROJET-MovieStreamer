@@ -2,7 +2,11 @@ package ca.usherbrooke.fgen.api.Entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "watch_movie_user", schema = "app")
 public class WatchMovieUser {

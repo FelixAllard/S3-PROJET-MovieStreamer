@@ -10,6 +10,8 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import java.util.List;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.*;
+
 
 @Path("/public/tag")
 public class TagPresentation {
@@ -28,12 +30,7 @@ public class TagPresentation {
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     @Path("/")
-    @APIResponse(responseCode = "201", description = "Tag créé avec succès")
-    @APIResponse(responseCode = "400", description = "Nom du tag invalide ou vide")
-    @APIResponse(responseCode = "409", description = "Tag déjà existant")
     public Response postTag(Tag tag) {
         Tag created = tagBusiness.postTag(tag);
         return Response.status(Response.Status.CREATED).entity(created).build();
@@ -45,7 +42,7 @@ public class TagPresentation {
         List<Tag> tags = tagBusiness.getAllTags();
         return Response.ok(tags).build();
     }
-      
+
     @DELETE
     @Path("{id}")
     public Response deleteTagByTagId(@PathParam("id") int id) {
@@ -57,4 +54,12 @@ public class TagPresentation {
 
         return Response.status(Response.Status.NOT_FOUND).build();
     }
+
+    @PUT
+    @Path("{id}")
+    public Response updateTagByTagId(@PathParam("id") int id, Tag updatedTag) {
+        Tag tag = tagBusiness.updateTagByTagId(id, updatedTag);
+        return Response.ok(tag).build(); // 200
+    }
+
 }

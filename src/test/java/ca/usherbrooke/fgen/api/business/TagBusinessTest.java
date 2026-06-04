@@ -3,15 +3,14 @@ package ca.usherbrooke.fgen.api.business;
 import ca.usherbrooke.fgen.api.Business.TagBusiness;
 import ca.usherbrooke.fgen.api.Data.TagData;
 import ca.usherbrooke.fgen.api.Entities.Tag;
-import io.smallrye.openapi.runtime.util.ModelUtil;
 import jakarta.ws.rs.WebApplicationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,7 +23,7 @@ public class TagBusinessTest {
     @BeforeEach
     void setUp() {
         System.out.println("=================================");
-        System.out.println(" TAG BUISNESS TEST START ");
+        System.out.println(" TAG BUSINESS TEST START ");
         System.out.println("=================================");
 
         tagData = Mockito.mock(TagData.class);
@@ -83,6 +82,69 @@ public class TagBusinessTest {
         assertFalse(result);
         verify(tagData, times(1)).deleteTagByTagId(99);
     }
+
+    @Test
+    void updateTagByTagId_delegueATagDataEtRetourneLeTag() {
+        // Arrange
+        Tag tag = new Tag();
+        tag.name = "Horreur";
+        when(tagData.updateTagByTagId(1, tag)).thenReturn(tag);
+
+        // Act
+        Tag result = tagBusiness.updateTagByTagId(1, tag);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(result.name,tag.name);
+        verify(tagData, times(1)).updateTagByTagId(1, tag);
+    }
+
+    @Test
+    void updateTagByTagId_negativeIdTest(){
+        // Arrange
+        Tag tag = new Tag();
+
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.updateTagByTagId(-1, tag);
+        });
+    }
+    @Test
+    void updateTagByTagId_negativeNullName(){
+        // Arrange
+        Tag tag = new Tag();
+
+
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.updateTagByTagId(0, tag);
+        });
+
+        tag.name = "";
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.updateTagByTagId(0, tag);
+        });
+
+        tag.name = "weoqriuqwpeoiruqpwoeiruasdlkjfhasdlkjfhqoiurye3dkjfhlksd" +
+                "jfhaslkdjfyhqoieuwryqowieuryqowiuyqowieruyqoeiuryqwioeruyqo" +
+                "wirueyqoiweuryqowieuryqowieuryqoiweuryqoiweuryweoqriuqwpeoi" +
+                "ruqpwoeiruasdlkjfhasdlkjfhqoiurye3dkjfhlksdjfhaslkdjfyhqoie" +
+                "uwryqowieuryqowiuyqowieruyqoeiuryqwioeruyqowirueyqoiweuryqo" +
+                "wieuryqowieuryqoiweuryqoiweuryweoqriuqwpeoiruqpwoeiruasdlkj" +
+                "fhasdlkjfhqoiurye3dkjfhlksdjfhaslkdjfyhqoieuwryqowieuryqowi" +
+                "uyqowieruyqoeiuryqwioeruyqowirueyqoiweuryqowieuryqowieuryqo";
+
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.updateTagByTagId(0, tag);
+        });
+    }
+
+    @Test
+    void updateTagByTagId_negativeNullTag(){
+        // Assert
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.updateTagByTagId(0, null);
+        });
+    }
+
 
     @Test
     void postTag_positiveTest()

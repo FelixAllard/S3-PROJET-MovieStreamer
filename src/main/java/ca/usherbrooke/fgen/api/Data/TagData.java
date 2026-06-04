@@ -24,16 +24,29 @@ public class TagData {
         return tag;
     }
 
+
     public String ping(){
         return "pong!";
     }
 
     public List<Tag> getAllTags(){ return tagRepository.listAll();}
-  
+
     @Transactional
     public boolean deleteTagByTagId(int id) {
         tagRepository.deleteMovieTagLinksByTagId(id);
         return tagRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Tag updateTagByTagId(int id, Tag updatedTag) {
+        Tag tag = tagRepository.findById(id);
+        if(tag==null)
+            throw new WebApplicationException("N'existe Pas", 404);
+
+        if (tagRepository.count("name", tag.name) > 0)
+            throw new WebApplicationException("Tag déjà existant.", 409);
+        tag.setName(updatedTag.name);
+        return tag;
     }
 
 }
