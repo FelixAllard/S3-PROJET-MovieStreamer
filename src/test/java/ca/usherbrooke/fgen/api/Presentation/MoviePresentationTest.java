@@ -53,4 +53,32 @@ public class MoviePresentationTest {
         assertTrue(((List<?>) response.getEntity()).isEmpty());
         verify(movieBusiness, times(1)).getAllMovies();
     }
+
+    @Test
+    void getMovieByMovieId_retourneStatus200AvecMovie() {
+        // Arrange
+        Movie movie = new Movie();
+        when(movieBusiness.getMovieByMovieId(1L)).thenReturn(movie);
+
+        // Act
+        Response response = moviePresentation.getMovieByMovieId(1L);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(movie, response.getEntity());
+        verify(movieBusiness, times(1)).getMovieByMovieId(1L);
+    }
+
+    @Test
+    void getMovieByMovieId_retourneStatus404_siMovieInexistant() {
+        // Arrange
+        when(movieBusiness.getMovieByMovieId(99L)).thenReturn(null);
+
+        // Act
+        Response response = moviePresentation.getMovieByMovieId(99L);
+
+        // Assert
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        verify(movieBusiness, times(1)).getMovieByMovieId(99L);
+    }
 }

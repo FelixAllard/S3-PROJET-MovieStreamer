@@ -22,4 +22,8 @@ public class MovieData {
     public List<Movie> getAllMovies(){
         return movieRepository.listAll();
     }
+
+    public Movie getMovieByMovieId(long id){
+        return movieRepository.findById(id);
+    }
 }

@@ -66,4 +66,6 @@ public class UserPresentationTest {
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertNull(response.getEntity());
     }
+
+
 }

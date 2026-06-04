@@ -55,4 +55,33 @@ public class MovieBusinessTest {
         assertTrue(result.isEmpty());
         verify(movieData, times(1)).getAllMovies();
     }
+
+    @Test
+    void getMovieByMovieId_delegueAMovieDataEtRetourneMovie() {
+        // Arrange
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        when(movieData.getMovieByMovieId(1L)).thenReturn(movie);
+
+        // Act
+        Movie result = movieBusiness.getMovieByMovieId(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Interstellar", result.title);
+        verify(movieData, times(1)).getMovieByMovieId(1L);
+    }
+
+    @Test
+    void getMovieByMovieId_retourneNull_siMovieInexistant() {
+        // Arrange
+        when(movieData.getMovieByMovieId(99L)).thenReturn(null);
+
+        // Act
+        Movie result = movieBusiness.getMovieByMovieId(99L);
+
+        // Assert
+        assertNull(result);
+        verify(movieData, times(1)).getMovieByMovieId(99L);
+    }
 }
