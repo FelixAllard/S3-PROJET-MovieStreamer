@@ -43,6 +43,8 @@ public class TagData {
         if(tag==null)
             throw new WebApplicationException("N'existe Pas", 404);
 
+        if (tagRepository.count("name", tag.name) > 0)
+            throw new WebApplicationException("Tag déjà existant.", 409);
         tag.setName(updatedTag.name);
         return tag;
     }
