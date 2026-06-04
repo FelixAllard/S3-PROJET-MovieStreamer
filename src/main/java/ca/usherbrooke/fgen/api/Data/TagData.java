@@ -4,6 +4,7 @@ import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 
 import java.util.List;
 
@@ -13,6 +14,14 @@ public class TagData {
 
     public TagData(TagRepository tagRepository) {
         this.tagRepository = tagRepository;
+    }
+
+    @Transactional
+    public Tag postTag(Tag tag) {
+        if (tagRepository.count("name", tag.name) > 0)
+            throw new WebApplicationException("Tag déjà existant.", 409);
+        tagRepository.persist(tag);
+        return tag;
     }
 
     public String ping(){

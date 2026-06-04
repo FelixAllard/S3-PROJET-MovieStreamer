@@ -3,10 +3,10 @@ package ca.usherbrooke.fgen.api.Presentation;
 import ca.usherbrooke.fgen.api.Business.TagBusiness;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import java.util.List;
 import jakarta.ws.rs.PathParam;
@@ -27,6 +27,18 @@ public class TagPresentation {
         return tagBusiness.ping();
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/")
+    @APIResponse(responseCode = "201", description = "Tag créé avec succès")
+    @APIResponse(responseCode = "400", description = "Nom du tag invalide ou vide")
+    @APIResponse(responseCode = "409", description = "Tag déjà existant")
+    public Response postTag(Tag tag) {
+        Tag created = tagBusiness.postTag(tag);
+        return Response.status(Response.Status.CREATED).entity(created).build();
+    }
+    
     @GET
     @Path("all")
     public Response getAllTags() {
