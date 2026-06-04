@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
-@Path("/public/movie")
+@Path("/api/movie")
 public class MoviePresentation {
     private final MovieBusiness movieBusiness;
 

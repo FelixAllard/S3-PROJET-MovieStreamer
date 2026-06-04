@@ -13,7 +13,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.*;
 
 
-@Path("/public/tag")
+@Path("/api/tag")
 public class TagPresentation {
 
     private final TagBusiness tagBusiness;

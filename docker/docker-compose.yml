@@ -13,18 +13,20 @@ services:
   auth:
     image: quay.io/keycloak/keycloak:19.0.3
     container_name: auth
-    volumes:
-      - ./keycloak/data:/var/tmp
-      - ./keycloak/startup-scripts/init.sh:/docker-entrypoint-sh/init.sh
-    entrypoint: sh -c "/docker-entrypoint-sh/init.sh"
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_PROXY: edge
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://database:5432/postgres
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
     ports:
-      - 8180:8180
+      - "8180:8180"
+    depends_on:
+      - database
     networks:
-      acad-net:
+      - acad-net
 
   database:
     image: postgres:13

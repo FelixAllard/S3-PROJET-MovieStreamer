@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
-@Path("/public/user")
+@Path("/api/user")
 public class UserPresentation {
     private final UserBusiness userBusiness;
 
