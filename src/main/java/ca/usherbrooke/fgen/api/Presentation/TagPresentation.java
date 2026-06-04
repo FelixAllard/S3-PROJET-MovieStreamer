@@ -36,6 +36,8 @@ public class TagPresentation {
     public Response postTag(Tag tag) {
         Tag created = tagBusiness.postTag(tag);
         return Response.status(Response.Status.CREATED).entity(created).build();
+    }
+    
     @GET
     @Path("all")
     public Response getAllTags() {
