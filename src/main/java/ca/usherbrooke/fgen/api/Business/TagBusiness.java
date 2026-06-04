@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
 
 import java.util.List;
 
@@ -23,6 +24,11 @@ public class TagBusiness {
         return tagData.ping();
     }
 
+    public Tag postTag(Tag tag) {
+        if(tag.name.isEmpty() || tag.name.length() < 1 || tag.name == null) {throw new WebApplicationException("Name is NULL or empty.", 400);}
+        return tagData.postTag(tag);
+    }
+
     public List<Tag> getAllTags(){
         return tagData.getAllTags();
     }
@@ -37,7 +43,7 @@ public class TagBusiness {
             );
 
         return tagData.deleteTagByTagId(id);
-        
+
     }
 
     public Tag updateTagByTagId(int id, Tag updatedTag) {

@@ -16,6 +16,14 @@ public class TagData {
         this.tagRepository = tagRepository;
     }
 
+    @Transactional
+    public Tag postTag(Tag tag) {
+        if (tagRepository.count("name", tag.name) > 0)
+            throw new WebApplicationException("Tag déjà existant.", 409);
+        tagRepository.persist(tag);
+        return tag;
+    }
+
 
     public String ping(){
         return "pong!";

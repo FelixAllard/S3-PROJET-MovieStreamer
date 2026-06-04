@@ -1,12 +1,15 @@
 package ca.usherbrooke.fgen.api.Data;
 
 
-import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Tag;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.WebApplicationException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import ca.usherbrooke.fgen.api.DAO.TagRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
 import java.util.List;
@@ -105,5 +108,37 @@ public class TagDataTest {
             Tag result = tagData.updateTagByTagId(0, new Tag());
         });
 
+    }
+
+    @Test
+    void postTag_testPositive()
+    {
+        Tag m1 = new Tag();
+        m1.id = 0;
+        m1.name = "test";
+        doNothing().when(tagRepository).persist(m1);
+        when(tagRepository.count("name", m1.name)).thenReturn(0l);
+
+        Tag result = tagData.postTag(m1);
+
+        assertNotNull(result);
+        verify(tagRepository, times(1)).persist(m1);
+
+        assertEquals(m1.id, result.id);
+        assertEquals(m1.name, m1.name);
+    }
+
+    @Test
+    void postTag_testNameAlreadyExists()
+    {
+        Tag m1 = new Tag();
+        m1.id = 0;
+        m1.name = "name";
+        doNothing().when(tagRepository).persist(m1);
+        when(tagRepository.count("name", m1.name)).thenReturn(1l);
+
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagData.postTag(m1);
+        });
     }
 }

@@ -44,4 +44,24 @@ public class UserDataTest {
         assertTrue(result.isEmpty());
         verify(userRepository, times(1)).listAll();
     }
+    @Test
+    void getUserByUserId_delegueAuRepositoryEtRetourneUtilisateur() {
+        User user = new User();
+        when(userRepository.findById(1L)).thenReturn(user);
+
+        User result = userData.getUserByUserId(1L);
+
+        assertEquals(user, result);
+        verify(userRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void getUserByUserId_retourneNull_siIdInexistant() {
+        when(userRepository.findById(99L)).thenReturn(null);
+
+        User result = userData.getUserByUserId(99L);
+
+        assertNull(result);
+        verify(userRepository, times(1)).findById(99L);
+    }
 }

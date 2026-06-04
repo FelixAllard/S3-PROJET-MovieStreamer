@@ -50,4 +50,32 @@ public class MovieDataTest {
         assertTrue(result.isEmpty());
         verify(movieRepository, times(1)).listAll();
     }
+
+    @Test
+    void getMovieByMovieId_delegueAuRepositoryEtRetourneMovie() {
+        // Arrange
+        Movie movie = new Movie();
+        when(movieRepository.findById(1L)).thenReturn(movie);
+
+        // Act
+        Movie result = movieData.getMovieByMovieId(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(movie, result);
+        verify(movieRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void getMovieByMovieId_retourneNull_siIdInexistant() {
+        // Arrange
+        when(movieRepository.findById(99L)).thenReturn(null);
+
+        // Act
+        Movie result = movieData.getMovieByMovieId(99L);
+
+        // Assert
+        assertNull(result);
+        verify(movieRepository, times(1)).findById(99L);
+    }
 }

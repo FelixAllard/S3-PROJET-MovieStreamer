@@ -6,10 +6,14 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
 import org.mockito.Mockito;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 public class TagBusinessTest {
 
@@ -141,4 +145,45 @@ public class TagBusinessTest {
         });
     }
 
+
+    @Test
+    void postTag_positiveTest()
+    {
+        Tag tag = new Tag();
+        tag.name = "Test";
+        tag.id = 0;
+        when(tagData.postTag(tag)).thenReturn(tag);
+
+        Tag result = tagBusiness.postTag(tag);
+        assertNotNull(result);
+        assertEquals(tag.id, result.id);
+        assertEquals(tag.name, result.name);
+    }
+
+    @Test
+    void postTag_nameEmptyTest()
+    {
+        Tag tag = new Tag();
+        tag.name = "";
+        tag.id = 0;
+        when(tagData.postTag(tag)).thenReturn(tag);
+
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.postTag(tag);
+        });
+    }
+
+
+//    @Test
+//    void postTag_nameNullTest()
+//    {
+//        Tag tag = new Tag();
+//        tag.name = null;
+//        tag.id = 0;
+//        when(tagData.postTag(tag)).thenReturn(tag);
+//
+//        assertThrows(WebApplicationException.class, () -> {
+//            Tag result = tagBusiness.postTag(tag);
+//        });
+//    }
 }
