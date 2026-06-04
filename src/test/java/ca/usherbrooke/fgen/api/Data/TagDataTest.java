@@ -33,9 +33,6 @@ public class TagDataTest {
         tagData = new TagData(tagRepository);
     }
 
-    @Inject   // ← manquant — c'est ça qui crée la variable tagData
-    TagData tagData;
-
     @Test
     void getAllTags_delegueAuRepositoryEtRetourneListe() {
         // Arrange
