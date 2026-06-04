@@ -58,13 +58,13 @@ public class UserPresentationTest {
     }
 
     @Test
-    void getUserByUserId_retourneStatus200AvecNull_siUtilisateurInexistant() {
+    void getUserByUserId_retourneStatus404_siUtilisateurInexistant() {
         when(userBusiness.getUserByUserId(99L)).thenReturn(null);
 
         Response response = userPresentation.getUserByUserId(99L);
 
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertNull(response.getEntity());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        verify(userBusiness, times(1)).getUserByUserId(99L);
     }
 
 
