@@ -45,4 +45,25 @@ public class UserPresentationTest {
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertTrue(((List<?>) response.getEntity()).isEmpty());
     }
+    @Test
+    void getUserByUserId_retourneStatus200AvecUtilisateur() {
+        User user = new User();
+        when(userBusiness.getUserByUserId(1L)).thenReturn(user);
+
+        Response response = userPresentation.getUserByUserId(1L);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(user, response.getEntity());
+        verify(userBusiness, times(1)).getUserByUserId(1L);
+    }
+
+    @Test
+    void getUserByUserId_retourneStatus200AvecNull_siUtilisateurInexistant() {
+        when(userBusiness.getUserByUserId(99L)).thenReturn(null);
+
+        Response response = userPresentation.getUserByUserId(99L);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNull(response.getEntity());
+    }
 }

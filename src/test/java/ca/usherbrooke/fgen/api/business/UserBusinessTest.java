@@ -45,4 +45,24 @@ public class UserBusinessTest {
         assertTrue(result.isEmpty());
         verify(userData, times(1)).getAllUsers();
     }
+    @Test
+    void getUserByUserId_delegueAUserDataEtRetourneUtilisateur() {
+        User user = new User();
+        when(userData.getUserByUserId(1L)).thenReturn(user);
+
+        User result = userBusiness.getUserByUserId(1L);
+
+        assertEquals(user, result);
+        verify(userData, times(1)).getUserByUserId(1L);
+    }
+
+    @Test
+    void getUserByUserId_retourneNull_siUtilisateurInexistant() {
+        when(userData.getUserByUserId(99L)).thenReturn(null);
+
+        User result = userBusiness.getUserByUserId(99L);
+
+        assertNull(result);
+        verify(userData, times(1)).getUserByUserId(99L);
+    }
 }
