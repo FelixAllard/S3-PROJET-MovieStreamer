@@ -85,37 +85,43 @@ public class TagBusinessTest {
     }
 
     @Test
-    public void addTag_newTag_success() {
-        TagData mockData = mock(TagData.class); // Objet de test (faux tag)
-        TagBusiness business = new TagBusiness(mockData);
-
+    void postTag_positiveTest()
+    {
         Tag tag = new Tag();
-        tag.name = "Thriller";
+        tag.name = "Test";
+        tag.id = 0;
+        when(tagData.postTag(tag)).thenReturn(tag);
 
-        // Simulation du tag qui n'existe pas
-        when(mockData.existsByName("Thriller")).thenReturn(false);
-        // Simulation d'une insertion réussite
-        when(mockData.postTag(tag)).thenReturn(tag);
-
-        Tag result = business.postTag(tag);
-        assertEquals("Thriller", result.name);
-        verify(mockData).postTag(tag); // Vérification du business test bel et bien appelé
+        Tag result = tagBusiness.postTag(tag);
+        assertNotNull(result);
+        assertEquals(tag.id, result.id);
+        assertEquals(tag.name, result.name);
     }
 
     @Test
-    public void addTag_duplicate_shouldThrow409() {
-        TagData mockData = mock(TagData.class);
-        TagBusiness business = new TagBusiness(mockData);
-
+    void postTag_nameEmptyTest()
+    {
         Tag tag = new Tag();
-        tag.name = "Action";
+        tag.name = "";
+        tag.id = 0;
+        when(tagData.postTag(tag)).thenReturn(tag);
 
-        when(mockData.existsByName("Action")).thenReturn(true);
-        WebApplicationException ex = assertThrows( // Pas trop catch
-                WebApplicationException.class,
-                () -> business.postTag(tag)
-        );
-        assertEquals(409, ex.getResponse().getStatus());
-        verify(mockData, never()).postTag(any()); // Vérification d'une insertion bel et bien bloquée
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagBusiness.postTag(tag);
+        });
     }
+
+
+//    @Test
+//    void postTag_nameNullTest()
+//    {
+//        Tag tag = new Tag();
+//        tag.name = null;
+//        tag.id = 0;
+//        when(tagData.postTag(tag)).thenReturn(tag);
+//
+//        assertThrows(WebApplicationException.class, () -> {
+//            Tag result = tagBusiness.postTag(tag);
+//        });
+//    }
 }

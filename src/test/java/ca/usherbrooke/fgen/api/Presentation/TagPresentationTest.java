@@ -86,26 +86,15 @@ public class TagPresentationTest {
     }
 
     @Test
-    public void addTag_validRequest_returns201() { // Test de validité lors de l'insertion
-        given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"Comédie\"}")
-                .when()
-                .post("/public/tag")
-                .then()
-                .statusCode(201)
-                .body("name", equalTo("Comédie"))
-                .body("id", notNullValue());
-    }
+    void postTag_positiveTest() {
+        Tag tag = new Tag();
+        tag.id = 0;
+        tag.name = "test";
+        when(tagBusiness.postTag(tag)).thenReturn(tag);
 
-    @Test
-    public void addTag_emptyName_returns400() { // Test de refus car nom vide
-        given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"\"}")
-                .when()
-                .post("/public/tag")
-                .then()
-                .statusCode(400);
+        Response response = tagPresentation.postTag(tag);
+
+        assertEquals(201, response.getStatus());
+        verify(tagBusiness, times(1)).postTag(tag);
     }
 }

@@ -22,9 +22,7 @@ public class TagBusiness {
     }
 
     public Tag postTag(Tag tag) {
-        if (tagData.existsByName(tag.name)) {
-            throw new WebApplicationException("Tag déjà existant.", 409);
-        }
+        if(tag.name.isEmpty() || tag.name.length() < 1 || tag.name == null) {throw new WebApplicationException("Name is NULL or empty.", 400);}
         return tagData.postTag(tag);
     }
     

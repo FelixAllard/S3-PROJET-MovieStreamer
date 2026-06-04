@@ -30,6 +30,7 @@ public class TagPresentation {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Path("/")
     @APIResponse(responseCode = "201", description = "Tag créé avec succès")
     @APIResponse(responseCode = "400", description = "Nom du tag invalide ou vide")
     @APIResponse(responseCode = "409", description = "Tag déjà existant")
