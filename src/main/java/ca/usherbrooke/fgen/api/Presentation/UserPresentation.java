@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Presentation;
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Entities.User;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -42,5 +43,15 @@ public class UserPresentation {
         }
 
         return Response.ok(users).build();
+    }
+
+    @DELETE
+    @Path("{id}")
+    public Response deleteUserByUserId(@PathParam("id") long id) {
+        boolean isDeleted = userBusiness.deleteUserByUserId(id);
+        if (isDeleted) {
+            return Response.noContent().build();
+        }
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 }

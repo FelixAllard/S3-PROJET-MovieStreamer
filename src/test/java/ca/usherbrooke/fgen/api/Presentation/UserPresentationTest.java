@@ -67,5 +67,24 @@ public class UserPresentationTest {
         verify(userBusiness, times(1)).getUserByUserId(99L);
     }
 
+    @Test
+    void deleteUserByUserId_retourneStatus204SiUserSupprime() {
+        when(userBusiness.deleteUserByUserId(1L)).thenReturn(true);
+
+        Response response = userPresentation.deleteUserByUserId(1L);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        verify(userBusiness, times(1)).deleteUserByUserId(1L);
+    }
+
+    @Test
+    void deleteUserByUserId_retourneStatus404SiUserInexistant() {
+        when(userBusiness.deleteUserByUserId(99L)).thenReturn(false);
+
+        Response response = userPresentation.deleteUserByUserId(99L);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        verify(userBusiness, times(1)).deleteUserByUserId(99L);
+    }
 
 }

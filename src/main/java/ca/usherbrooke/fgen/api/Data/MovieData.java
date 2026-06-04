@@ -4,6 +4,7 @@ package ca.usherbrooke.fgen.api.Data;
 import ca.usherbrooke.fgen.api.DAO.MovieRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 
@@ -25,5 +26,10 @@ public class MovieData {
 
     public Movie getMovieByMovieId(long id){
         return movieRepository.findById(id);
+    }
+
+    @Transactional
+    public boolean deleteMovieByMovieId(long id) {
+        return movieRepository.deleteById(id);
     }
 }

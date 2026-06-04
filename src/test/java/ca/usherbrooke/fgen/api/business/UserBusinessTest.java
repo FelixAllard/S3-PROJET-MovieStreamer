@@ -65,4 +65,24 @@ public class UserBusinessTest {
         assertNull(result);
         verify(userData, times(1)).getUserByUserId(99L);
     }
+
+    @Test
+    void deleteUserByUserId_delegueAUserDataEtRetourneTrue() {
+        when(userData.deleteUserByUserId(1L)).thenReturn(true);
+
+        boolean result = userBusiness.deleteUserByUserId(1L);
+
+        assertTrue(result);
+        verify(userData, times(1)).deleteUserByUserId(1L);
+    }
+
+    @Test
+    void deleteUserByUserId_retourneFalseSiUserInexistant() {
+        when(userData.deleteUserByUserId(99L)).thenReturn(false);
+
+        boolean result = userBusiness.deleteUserByUserId(99L);
+
+        assertFalse(result);
+        verify(userData, times(1)).deleteUserByUserId(99L);
+    }
 }
