@@ -1,8 +1,10 @@
 package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.TagData;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class TagBusiness {
@@ -19,4 +21,10 @@ public class TagBusiness {
         return tagData.ping();
     }
 
+    public Tag postTag(Tag tag) {
+        if (tagData.existsByName(tag.name)) {
+            throw new WebApplicationException("Tag déjà existant.", 409);
+        }
+        return tagData.postTag(tag);
+    }
 }
