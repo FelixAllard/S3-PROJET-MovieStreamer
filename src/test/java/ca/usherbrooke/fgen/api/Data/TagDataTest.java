@@ -4,6 +4,7 @@ package ca.usherbrooke.fgen.api.Data;
 import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -72,5 +73,37 @@ public class TagDataTest {
         assertFalse(result);
         verify(tagRepository, times(1)).deleteMovieTagLinksByTagId(99);
         verify(tagRepository, times(1)).deleteById(99);
+    }
+
+    @Test
+    void updateTagByTagId_modifieLeNomEtRetourneLeTag() {
+        // Arrange
+        Tag existingTag = new Tag();
+        existingTag.id = 1;
+        existingTag.name = "Action";
+
+        Tag updatedTag = new Tag();
+        updatedTag.name = "Horreur";
+
+        when(tagRepository.findById(1)).thenReturn(existingTag);
+
+        // Act
+        Tag result = tagData.updateTagByTagId(1, updatedTag);
+
+        // Assert
+        assertEquals("Horreur", result.name);
+        verify(tagRepository, times(1)).findById(1);
+    }
+
+    @Test
+    void updateTagByTagId_retourneNullSiTagInexistant() {
+        //Arrange
+        when(tagRepository.findById(0)).thenReturn(null);
+
+        // Assert
+        assertThrows(WebApplicationException.class, () -> {
+            Tag result = tagData.updateTagByTagId(0, new Tag());
+        });
+
     }
 }

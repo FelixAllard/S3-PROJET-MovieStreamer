@@ -10,6 +10,10 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 
 @Path("/public/tag")
 public class TagPresentation {
@@ -33,7 +37,7 @@ public class TagPresentation {
         List<Tag> tags = tagBusiness.getAllTags();
         return Response.ok(tags).build();
     }
-      
+
     @DELETE
     @Path("{id}")
     public Response deleteTagByTagId(@PathParam("id") int id) {
@@ -45,4 +49,13 @@ public class TagPresentation {
 
         return Response.status(Response.Status.NOT_FOUND).build();
     }
+
+    @PUT
+    @Path("{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateTagByTagId(@PathParam("id") int id, Tag updatedTag) {
+        Tag tag = tagBusiness.updateTagByTagId(id, updatedTag);
+        return Response.ok(tag).build(); // 200
+    }
+
 }

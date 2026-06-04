@@ -30,7 +30,7 @@ public class TagPresentationTest {
     }
 
     @Test
-    void getAllTags_retourneStatus200AvecListeFilms() {
+    void getAllTags_retourneStatus200AvecListeTags() {
         // Arrange
         Tag m1 = new Tag();
         Tag m2 = new Tag();
@@ -79,4 +79,29 @@ public class TagPresentationTest {
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         verify(tagBusiness, times(1)).deleteTagByTagId(99);
     }
+
+    @Test
+    void updateTagByTagId_retourneStatus204SiTagUpdated()
+    {
+        //Arrange
+        Tag existingTag = new Tag();
+        existingTag.id = 1;
+        existingTag.name = "Action";
+
+        Tag newTag = new Tag();
+        newTag.name = "Horreur";
+
+        when(tagBusiness.updateTagByTagId(1, newTag)).thenReturn(newTag);
+
+        // Act
+        Response response = tagPresentation.updateTagByTagId(1, newTag);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(newTag, response.getEntity());
+        verify(tagBusiness, times(1)).updateTagByTagId(1, newTag);
+    }
+
+
+
 }
