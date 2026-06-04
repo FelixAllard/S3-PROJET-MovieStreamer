@@ -24,4 +24,9 @@ public class UserBusiness {
         return userData.getAllUsers();
     }
 
+    public User getUserByUserId(long id)
+    {
+        return userData.getUserByUserId(id);
+    }
+
 }

@@ -25,4 +25,8 @@ public class MovieBusiness {
     public List<Movie> getAllMovies(){
         return movieData.getAllMovies();
     }
+
+    public Movie getMovieByMovieId(long id){
+        return movieData.getMovieByMovieId(id);
+    }
 }
