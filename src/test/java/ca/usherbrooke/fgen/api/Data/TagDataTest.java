@@ -1,26 +1,55 @@
 package ca.usherbrooke.fgen.api.Data;
 
+
 import ca.usherbrooke.fgen.api.DAO.TagRepository;
+import ca.usherbrooke.fgen.api.Entities.Tag;
+import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
-        import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.*;
 
 public class TagDataTest {
-
     private TagRepository tagRepository;
     private TagData tagData;
 
     @BeforeEach
     void setUp() {
-        System.out.println("=================================");
-        System.out.println(" TAG DATA TEST START ");
-        System.out.println("=================================");
-
         tagRepository = Mockito.mock(TagRepository.class);
         tagData = new TagData(tagRepository);
+    }
+
+    @Test
+    void getAllTags_delegueAuRepositoryEtRetourneListe() {
+        // Arrange
+        Tag m1 = new Tag();
+        Tag m2 = new Tag();
+        when(tagRepository.listAll()).thenReturn(List.of(m1, m2));
+
+        // Act
+        List<Tag> result = tagData.getAllTags();
+
+        // Assert
+        assertEquals(2, result.size());
+        verify(tagRepository, times(1)).listAll();
+    }
+
+    @Test
+    void getAllTags_retourneListeVideSiRepositoryVide() {
+        // Arrange
+        when(tagRepository.listAll()).thenReturn(List.of());
+
+        // Act
+        List<Tag> result = tagData.getAllTags();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(tagRepository, times(1)).listAll();
     }
 
     @Test

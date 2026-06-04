@@ -1,8 +1,11 @@
 package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.TagRepository;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @ApplicationScoped
 public class TagData {
@@ -16,6 +19,8 @@ public class TagData {
         return "pong!";
     }
 
+    public List<Tag> getAllTags(){ return tagRepository.listAll();}
+  
     @Transactional
     public boolean deleteTagByTagId(int id) {
         tagRepository.deleteMovieTagLinksByTagId(id);

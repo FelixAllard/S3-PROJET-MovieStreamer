@@ -44,3 +44,6 @@
 .gradle/
 /gradle/
 /.gradle/
+build/
+.idea/
+
