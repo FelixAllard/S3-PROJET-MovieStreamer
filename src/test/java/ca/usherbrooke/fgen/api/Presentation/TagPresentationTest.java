@@ -1,6 +1,7 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.TagBusiness;
+import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ public class TagPresentationTest {
 
     private TagBusiness tagBusiness;
     private TagPresentation tagPresentation;
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -25,7 +27,7 @@ public class TagPresentationTest {
         System.out.println("=================================");
 
         tagBusiness = Mockito.mock(TagBusiness.class);
-        tagPresentation = new TagPresentation(tagBusiness);
+        tagPresentation = new TagPresentation(tagBusiness, userService);
     }
 
     @Test

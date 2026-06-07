@@ -1,6 +1,7 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
+import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +17,12 @@ public class MoviePresentationTest {
 
     private MovieBusiness movieBusiness;
     private MoviePresentation moviePresentation;
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
         movieBusiness = Mockito.mock(MovieBusiness.class);
-        moviePresentation = new MoviePresentation(movieBusiness);
+        moviePresentation = new MoviePresentation(movieBusiness, userService);
     }
 
     @Test

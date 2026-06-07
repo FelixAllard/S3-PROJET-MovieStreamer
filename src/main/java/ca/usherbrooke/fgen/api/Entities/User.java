@@ -20,6 +20,9 @@ public class User {
     public String surname;
     public String email;
 
+    @Column(name = "keycloak_id", unique = true)
+    public String keycloakId;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<WatchMovieUser> watchedMovies = new ArrayList<>();
 }

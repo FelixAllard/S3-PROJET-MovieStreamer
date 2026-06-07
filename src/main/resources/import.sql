@@ -18,9 +18,9 @@ INSERT INTO app.movie_tags (movie_id, tag_id) VALUES
 (2, 2);
 
 -- Users
-INSERT INTO app.app_user (name, surname, email) VALUES
-('John', 'Doe', 'john.doe@example.com'),
-('Jane', 'Smith', 'jane.smith@example.com');
+INSERT INTO app.app_user (name, surname, email, keycloak_id) VALUES
+('John', 'Doe', 'john.doe@example.com', '11111111-1111-1111-1111-111111111111'),
+('Jane', 'Smith', 'jane.smith@example.com', '22222222-2222-2222-2222-222222222222');
 
 -- User Watchlists (WatchMovieUser Bridge Table)
 INSERT INTO app.watch_movie_user (user_id, movie_id, status, saved) VALUES
