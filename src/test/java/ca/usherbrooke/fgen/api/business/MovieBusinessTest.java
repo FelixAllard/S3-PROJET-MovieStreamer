@@ -84,4 +84,24 @@ public class MovieBusinessTest {
         assertNull(result);
         verify(movieData, times(1)).getMovieByMovieId(99L);
     }
+
+    @Test
+    void deleteMovieByMovieId_delegueAMovieDataEtRetourneTrue() {
+        when(movieData.deleteMovieByMovieId(1L)).thenReturn(true);
+
+        boolean result = movieBusiness.deleteMovieByMovieId(1L);
+
+        assertTrue(result);
+        verify(movieData, times(1)).deleteMovieByMovieId(1L);
+    }
+
+    @Test
+    void deleteMovieByMovieId_retourneFalseSiMovieInexistant() {
+        when(movieData.deleteMovieByMovieId(99L)).thenReturn(false);
+
+        boolean result = movieBusiness.deleteMovieByMovieId(99L);
+
+        assertFalse(result);
+        verify(movieData, times(1)).deleteMovieByMovieId(99L);
+    }
 }

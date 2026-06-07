@@ -78,4 +78,24 @@ public class MovieDataTest {
         assertNull(result);
         verify(movieRepository, times(1)).findById(99L);
     }
+
+    @Test
+    void deleteMovieByMovieId_delegueAuRepositoryEtRetourneTrue() {
+        when(movieRepository.deleteById(1L)).thenReturn(true);
+
+        boolean result = movieData.deleteMovieByMovieId(1L);
+
+        assertTrue(result);
+        verify(movieRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteMovieByMovieId_retourneFalseSiRepositoryNeSupprimeRien() {
+        when(movieRepository.deleteById(99L)).thenReturn(false);
+
+        boolean result = movieData.deleteMovieByMovieId(99L);
+
+        assertFalse(result);
+        verify(movieRepository, times(1)).deleteById(99L);
+    }
 }

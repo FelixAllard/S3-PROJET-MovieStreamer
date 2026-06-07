@@ -64,4 +64,24 @@ public class UserDataTest {
         assertNull(result);
         verify(userRepository, times(1)).findById(99L);
     }
+
+    @Test
+    void deleteUserByUserId_delegueAuRepositoryEtRetourneTrue() {
+        when(userRepository.deleteById(1L)).thenReturn(true);
+
+        boolean result = userData.deleteUserByUserId(1L);
+
+        assertTrue(result);
+        verify(userRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteUserByUserId_retourneFalseSiRepositoryNeSupprimeRien() {
+        when(userRepository.deleteById(99L)).thenReturn(false);
+
+        boolean result = userData.deleteUserByUserId(99L);
+
+        assertFalse(result);
+        verify(userRepository, times(1)).deleteById(99L);
+    }
 }

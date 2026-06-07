@@ -83,4 +83,24 @@ public class MoviePresentationTest {
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         verify(movieBusiness, times(1)).getMovieByMovieId(99L);
     }
+
+    @Test
+    void deleteMovieByMovieId_retourneStatus204SiMovieSupprime() {
+        when(movieBusiness.deleteMovieByMovieId(1L)).thenReturn(true);
+
+        Response response = moviePresentation.deleteMovieByMovieId(1L);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        verify(movieBusiness, times(1)).deleteMovieByMovieId(1L);
+    }
+
+    @Test
+    void deleteMovieByMovieId_retourneStatus404SiMovieInexistant() {
+        when(movieBusiness.deleteMovieByMovieId(99L)).thenReturn(false);
+
+        Response response = moviePresentation.deleteMovieByMovieId(99L);
+
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        verify(movieBusiness, times(1)).deleteMovieByMovieId(99L);
+    }
 }

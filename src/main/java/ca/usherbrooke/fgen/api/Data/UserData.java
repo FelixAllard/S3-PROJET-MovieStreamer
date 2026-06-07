@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Data;
 import ca.usherbrooke.fgen.api.DAO.UserRepository;
 import ca.usherbrooke.fgen.api.Entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 
 import java.util.List;
@@ -27,5 +28,10 @@ public class UserData {
     public User getUserByUserId(Long id)
     {
         return userRepository.findById(id);
+    }
+
+    @Transactional
+    public boolean deleteUserByUserId(long id) {
+        return userRepository.deleteById(id);
     }
 }
