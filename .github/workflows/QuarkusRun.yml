@@ -33,15 +33,8 @@ jobs:
       - name: Wait for infrastructure
         run: sleep 20
 
-      # ✅ FIX: remove ":" (not needed)
       - name: Build Quarkus app
         run: ./gradlew build -x test
-
-      # 🚀 Start app safely
-      - name: Start Quarkus application
-        run: |
-          nohup java -jar build/quarkus-app/quarkus-run.jar > app.log 2>&1 &
-          echo $! > app.pid
 
       - name: Start Quarkus application
         run: |
