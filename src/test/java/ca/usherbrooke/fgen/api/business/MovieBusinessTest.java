@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.business;
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Data.MovieData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -83,5 +84,32 @@ public class MovieBusinessTest {
         // Assert
         assertNull(result);
         verify(movieData, times(1)).getMovieByMovieId(99L);
+    }
+
+    @Test
+    void getMovieByMovieName_delegueAMovieDataEtRetourneMovie() {
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        when(movieData.getMovieByMovieName("Interstellar")).thenReturn(movie);
+
+        Movie result = movieBusiness.getMovieByMovieName("Interstellar");
+
+        assertNotNull(result);
+        assertEquals("Interstellar", result.title);
+        verify(movieData, times(1)).getMovieByMovieName("Interstellar");
+    }
+
+    @Test
+    void getMovieByMovieName_nameNullOuVideLanceException() {
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName(null));
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName(""));
+    }
+
+    @Test
+    void getMovieByMovieName_movieInexistantLanceException() {
+        when(movieData.getMovieByMovieName("Inexistant")).thenReturn(null);
+
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName("Inexistant"));
+        verify(movieData, times(1)).getMovieByMovieName("Inexistant");
     }
 }

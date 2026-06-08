@@ -54,4 +54,12 @@ public class MoviePresentation {
         return Response.ok(movies).build();
     }
 
+    @GET
+    @Path("name/{name}")
+    @RolesAllowed({"user", "admin"})
+    public Response getMovieByMovieName(@PathParam("name") String name) {
+        Movie movie = movieBusiness.getMovieByMovieName(name);
+        return Response.ok(movie).build();
+    }
+
 }

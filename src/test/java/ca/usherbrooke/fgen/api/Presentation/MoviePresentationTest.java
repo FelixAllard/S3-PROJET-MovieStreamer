@@ -83,4 +83,17 @@ public class MoviePresentationTest {
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
         verify(movieBusiness, times(1)).getMovieByMovieId(99L);
     }
+
+    @Test
+    void getMovieByMovieName_retourneStatus200AvecMovie() {
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        when(movieBusiness.getMovieByMovieName("Interstellar")).thenReturn(movie);
+
+        Response response = moviePresentation.getMovieByMovieName("Interstellar");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(movie, response.getEntity());
+        verify(movieBusiness, times(1)).getMovieByMovieName("Interstellar");
+    }
 }
