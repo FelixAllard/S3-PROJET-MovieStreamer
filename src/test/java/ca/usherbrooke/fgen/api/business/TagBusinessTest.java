@@ -62,6 +62,33 @@ public class TagBusinessTest {
         assertTrue(result.isEmpty());
         verify(tagData, times(1)).getAllTags();
     }
+
+    @Test
+    void getTagByName_delegueATagDataEtRetourneTag() {
+        Tag tag = new Tag();
+        tag.name = "Action";
+        when(tagData.getTagByName("Action")).thenReturn(tag);
+
+        Tag result = tagBusiness.getTagByName("Action");
+
+        assertNotNull(result);
+        assertEquals("Action", result.name);
+        verify(tagData, times(1)).getTagByName("Action");
+    }
+
+    @Test
+    void getTagByName_nameNullOuVideLanceException() {
+        assertThrows(WebApplicationException.class, () -> tagBusiness.getTagByName(null));
+        assertThrows(WebApplicationException.class, () -> tagBusiness.getTagByName(""));
+    }
+
+    @Test
+    void getTagByName_tagInexistantLanceException() {
+        when(tagData.getTagByName("Inexistant")).thenReturn(null);
+
+        assertThrows(WebApplicationException.class, () -> tagBusiness.getTagByName("Inexistant"));
+        verify(tagData, times(1)).getTagByName("Inexistant");
+    }
   
     @Test
     void deleteTagByTagId_delegueATagDataEtRetourneTrue() {

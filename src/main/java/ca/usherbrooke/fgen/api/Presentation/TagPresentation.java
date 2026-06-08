@@ -41,6 +41,14 @@ public class TagPresentation {
         return Response.ok(tags).build();
     }
 
+    @GET
+    @Path("name/{name}")
+    @PermitAll
+    public Response getTagByName(@PathParam("name") String name) {
+        Tag tag = tagBusiness.getTagByName(name);
+        return Response.ok(tag).build();
+    }
+
     @POST
     @Path("/")
     @RolesAllowed({"admin"})

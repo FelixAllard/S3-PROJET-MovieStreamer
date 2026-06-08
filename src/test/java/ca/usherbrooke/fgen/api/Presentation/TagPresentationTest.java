@@ -60,6 +60,20 @@ public class TagPresentationTest {
         assertTrue(((List<?>) response.getEntity()).isEmpty());
         verify(tagBusiness, times(1)).getAllTags();
     }
+
+    @Test
+    void getTagByName_retourneStatus200AvecTag() {
+        Tag tag = new Tag();
+        tag.id = 1;
+        tag.name = "Action";
+        when(tagBusiness.getTagByName("Action")).thenReturn(tag);
+
+        Response response = tagPresentation.getTagByName("Action");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(tag, response.getEntity());
+        verify(tagBusiness, times(1)).getTagByName("Action");
+    }
   
     @Test
     void deleteTagByTagId_retourneStatus204SiTagSupprime() {

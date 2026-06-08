@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository; // Adjust name/package if your DAO is named differently
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -77,5 +78,36 @@ public class MovieDataTest {
         // Assert
         assertNull(result);
         verify(movieRepository, times(1)).findById(99L);
+    }
+
+    @Test
+    void getMovieByMovieName_delegueAuRepositoryEtRetourneMovie() {
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        @SuppressWarnings("unchecked")
+        PanacheQuery<Movie> query = Mockito.mock(PanacheQuery.class);
+        when(movieRepository.find("title", "Interstellar")).thenReturn(query);
+        when(query.firstResult()).thenReturn(movie);
+
+        Movie result = movieData.getMovieByMovieName("Interstellar");
+
+        assertNotNull(result);
+        assertEquals(movie, result);
+        verify(movieRepository, times(1)).find("title", "Interstellar");
+        verify(query, times(1)).firstResult();
+    }
+
+    @Test
+    void getMovieByMovieName_retourneNull_siNomInexistant() {
+        @SuppressWarnings("unchecked")
+        PanacheQuery<Movie> query = Mockito.mock(PanacheQuery.class);
+        when(movieRepository.find("title", "Inexistant")).thenReturn(query);
+        when(query.firstResult()).thenReturn(null);
+
+        Movie result = movieData.getMovieByMovieName("Inexistant");
+
+        assertNull(result);
+        verify(movieRepository, times(1)).find("title", "Inexistant");
+        verify(query, times(1)).firstResult();
     }
 }

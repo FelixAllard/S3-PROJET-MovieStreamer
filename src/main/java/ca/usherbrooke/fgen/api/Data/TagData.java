@@ -36,6 +36,10 @@ public class TagData {
 
     public List<Tag> getAllTags(){ return tagRepository.listAll();}
 
+    public Tag getTagByName(String name) {
+        return tagRepository.find("name", name).firstResult();
+    }
+
     @Transactional
     public boolean deleteTagByTagId(int id) {
         tagRepository.deleteMovieTagLinksByTagId(id);

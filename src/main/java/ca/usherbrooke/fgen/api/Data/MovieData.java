@@ -26,4 +26,8 @@ public class MovieData {
     public Movie getMovieByMovieId(long id){
         return movieRepository.findById(id);
     }
+
+    public Movie getMovieByMovieName(String name) {
+        return movieRepository.find("title", name).firstResult();
+    }
 }

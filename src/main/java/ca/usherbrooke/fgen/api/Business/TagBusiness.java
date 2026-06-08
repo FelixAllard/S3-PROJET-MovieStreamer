@@ -37,6 +37,19 @@ public class TagBusiness {
         return tagData.getAllTags();
     }
 
+    public Tag getTagByName(String name) {
+        if (name == null)
+            ExceptionUtils.throwException(400, "Tag Name Null");
+        if (name.isEmpty())
+            ExceptionUtils.throwException(422, "Tag Name Cannot Be Empty");
+
+        Tag tag = tagData.getTagByName(name);
+        if (tag == null)
+            ExceptionUtils.throwException(404, "Tag Not Found");
+
+        return tag;
+    }
+
     public boolean deleteTagByTagId(int id) {
         if (id < 0)
             ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");

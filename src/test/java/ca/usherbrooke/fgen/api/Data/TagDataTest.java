@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.ws.rs.WebApplicationException;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,6 +55,38 @@ public class TagDataTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(tagRepository, times(1)).listAll();
+    }
+
+    @Test
+    void getTagByName_delegueAuRepositoryEtRetourneTag() {
+        Tag tag = new Tag();
+        tag.id = 1;
+        tag.name = "Action";
+        @SuppressWarnings("unchecked")
+        PanacheQuery<Tag> query = Mockito.mock(PanacheQuery.class);
+        when(tagRepository.find("name", "Action")).thenReturn(query);
+        when(query.firstResult()).thenReturn(tag);
+
+        Tag result = tagData.getTagByName("Action");
+
+        assertNotNull(result);
+        assertEquals("Action", result.name);
+        verify(tagRepository, times(1)).find("name", "Action");
+        verify(query, times(1)).firstResult();
+    }
+
+    @Test
+    void getTagByName_retourneNullSiTagAbsent() {
+        @SuppressWarnings("unchecked")
+        PanacheQuery<Tag> query = Mockito.mock(PanacheQuery.class);
+        when(tagRepository.find("name", "Inexistant")).thenReturn(query);
+        when(query.firstResult()).thenReturn(null);
+
+        Tag result = tagData.getTagByName("Inexistant");
+
+        assertNull(result);
+        verify(tagRepository, times(1)).find("name", "Inexistant");
+        verify(query, times(1)).firstResult();
     }
 
     @Test
