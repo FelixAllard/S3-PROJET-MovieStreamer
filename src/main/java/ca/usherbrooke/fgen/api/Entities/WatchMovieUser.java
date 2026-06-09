@@ -1,6 +1,6 @@
 package ca.usherbrooke.fgen.api.Entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,15 +16,17 @@ public class WatchMovieUser {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties("watchedMovies")
+    @JsonIgnore
     public User user;
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
+    @JsonIgnore
     public Movie movie;
 
     @Enumerated(EnumType.STRING)
     public MovieStatus status;
 
     public boolean saved;
+    public Integer rating;
 }
