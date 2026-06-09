@@ -35,7 +35,7 @@ public class MoviePresentation {
 
     @GET
     @Path("all")
-    @RolesAllowed({"user", "admin"})
+    @PermitAll
     public Response getAllMovies() {
         List<Movie> users = movieBusiness.getAllMovies();
         return Response.ok(users).build();
@@ -43,7 +43,7 @@ public class MoviePresentation {
 
     @GET
     @Path("{id}")
-    @RolesAllowed({"user", "admin"})
+    @PermitAll
     public Response getMovieByMovieId(@PathParam("id") long id)
     {
         Movie movies = movieBusiness.getMovieByMovieId(id);
@@ -56,7 +56,7 @@ public class MoviePresentation {
 
     @GET
     @Path("name/{name}")
-    @RolesAllowed({"user", "admin"})
+    @PermitAll
     public Response getMovieByMovieName(@PathParam("name") String name) {
         Movie movie = movieBusiness.getMovieByMovieName(name);
         return Response.ok(movie).build();

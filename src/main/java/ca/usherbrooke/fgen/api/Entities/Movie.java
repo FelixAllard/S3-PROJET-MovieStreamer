@@ -38,6 +38,6 @@ public class Movie {
     public String studio;
     public String language;
 
-
-
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<WatchMovieUser> watchedMovieUsers = new ArrayList<>();
 }

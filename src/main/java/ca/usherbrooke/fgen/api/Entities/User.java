@@ -24,5 +24,5 @@ public class User {
     public String keycloakId;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<WatchMovieUser> watchedMovies = new ArrayList<>();
+    public List<WatchMovieUser> watchedMovieUsers = new ArrayList<>();
 }
