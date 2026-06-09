@@ -29,9 +29,9 @@ public class WatchMovieUserBusiness {
         }
     }
 
-    public List<WatchMovieUser> getUserWatchlistByUserId(long userId) {
+    public List<WatchMovieUser> getUserSavedListByUserId(long userId) {
         validateUserExists(userId);
-        return watchMovieUserData.getWatchlistByUserId(userId);
+        return watchMovieUserData.getSavedListByUserId(userId);
     }
 
     public List<WatchMovieUser> getUserWatchedMoviesByUserId(long userId) {

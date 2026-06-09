@@ -51,18 +51,18 @@ public class WatchMovieUserPresentationTest {
 
 
     @Test
-    void getUserWatchlistByUserId_retourneStatus200AvecListe() {
+    void getUserSavedListByUserId_retourneStatus200AvecListe() {
         long userId = 1L;
         mockAdminAccess(userId);
 
         WatchMovieUser item = new WatchMovieUser();
-        when(watchMovieUserBusiness.getUserWatchlistByUserId(userId)).thenReturn(List.of(item));
+        when(watchMovieUserBusiness.getUserSavedListByUserId(userId)).thenReturn(List.of(item));
 
-        Response response = presentation.getUserWatchlistByUserId(userId);
+        Response response = presentation.getUserSavedListByUserId(userId);
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(List.of(item), response.getEntity());
-        verify(watchMovieUserBusiness, times(1)).getUserWatchlistByUserId(userId);
+        verify(watchMovieUserBusiness, times(1)).getUserSavedListByUserId(userId);
     }
 
 
@@ -132,7 +132,7 @@ public class WatchMovieUserPresentationTest {
         // Running any history API method should throw a 403 Forbidden via ExceptionUtils
         WebApplicationException exception = assertThrows(
                 WebApplicationException.class,
-                () -> presentation.getUserWatchlistByUserId(pathUserId)
+                () -> presentation.getUserSavedListByUserId(pathUserId)
         );
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), exception.getResponse().getStatus());

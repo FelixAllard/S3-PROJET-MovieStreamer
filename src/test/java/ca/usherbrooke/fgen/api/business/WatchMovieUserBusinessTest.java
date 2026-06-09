@@ -39,7 +39,7 @@ public class WatchMovieUserBusinessTest {
     void validateUserExists_lanceException400_siIdInvalide() {
         WebApplicationException exception = assertThrows(
                 WebApplicationException.class,
-                () -> watchMovieUserBusiness.getUserWatchlistByUserId(-5L)
+                () -> watchMovieUserBusiness.getUserSavedListByUserId(-5L)
         );
         assertEquals(400, exception.getResponse().getStatus());
         verifyNoInteractions(watchMovieUserData);
@@ -52,7 +52,7 @@ public class WatchMovieUserBusinessTest {
 
         WebApplicationException exception = assertThrows(
                 WebApplicationException.class,
-                () -> watchMovieUserBusiness.getUserWatchlistByUserId(nonExistentUserId)
+                () -> watchMovieUserBusiness.getUserSavedListByUserId(nonExistentUserId)
         );
         assertEquals(404, exception.getResponse().getStatus());
         verifyNoInteractions(watchMovieUserData);
@@ -64,12 +64,12 @@ public class WatchMovieUserBusinessTest {
         mockUserExists(userId);
 
         WatchMovieUser match = new WatchMovieUser();
-        when(watchMovieUserData.getWatchlistByUserId(userId)).thenReturn(List.of(match));
+        when(watchMovieUserData.getSavedListByUserId(userId)).thenReturn(List.of(match));
 
-        List<WatchMovieUser> result = watchMovieUserBusiness.getUserWatchlistByUserId(userId);
+        List<WatchMovieUser> result = watchMovieUserBusiness.getUserSavedListByUserId(userId);
 
         assertEquals(1, result.size());
-        verify(watchMovieUserData, times(1)).getWatchlistByUserId(userId);
+        verify(watchMovieUserData, times(1)).getSavedListByUserId(userId);
     }
 
     @Test

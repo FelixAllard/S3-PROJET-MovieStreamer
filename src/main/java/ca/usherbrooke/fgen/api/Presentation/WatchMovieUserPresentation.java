@@ -38,11 +38,11 @@ public class WatchMovieUserPresentation {
     }
 
     @GET
-    @Path("watchlist/{userId}")
+    @Path("saved/{userId}")
     @RolesAllowed({"user", "admin"})
-    public Response getUserWatchlistByUserId(@PathParam("userId") long userId) {
+    public Response getUserSavedListByUserId(@PathParam("userId") long userId) {
         SecurityUtils.verifyOwnershipOrAdmin(userId, userBusiness, jwt, securityContext);
-        List<WatchMovieUser> watchlist = watchMovieUserBusiness.getUserWatchlistByUserId(userId);
+        List<WatchMovieUser> watchlist = watchMovieUserBusiness.getUserSavedListByUserId(userId);
         return Response.ok(watchlist).build();
     }
 

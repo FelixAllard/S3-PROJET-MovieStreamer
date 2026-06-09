@@ -27,7 +27,7 @@ public class WatchMovieUserDataTest {
 
 
     @Test
-    void getWatchlistByUserId_delegueAuRepositoryEtRetourneListe() {
+    void getSavedListByUserId_delegueAuRepositoryEtRetourneListe() {
         long userId = 1L;
         WatchMovieUser item1 = new WatchMovieUser();
         WatchMovieUser item2 = new WatchMovieUser();
@@ -35,7 +35,7 @@ public class WatchMovieUserDataTest {
         when(watchMovieUserRepository.list("user.id = ?1 and saved = true", userId))
                 .thenReturn(List.of(item1, item2));
 
-        List<WatchMovieUser> result = watchMovieUserData.getWatchlistByUserId(userId);
+        List<WatchMovieUser> result = watchMovieUserData.getSavedListByUserId(userId);
 
         assertEquals(2, result.size());
         verify(watchMovieUserRepository, times(1))

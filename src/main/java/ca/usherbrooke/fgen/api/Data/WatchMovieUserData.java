@@ -18,7 +18,7 @@ public class WatchMovieUserData {
     }
 
     // Might eventually need to use the mapper for all the sql ?
-    public List<WatchMovieUser> getWatchlistByUserId(long userId) {
+    public List<WatchMovieUser> getSavedListByUserId(long userId) {
         return watchMovieUserRepository.list("user.id = ?1 and saved = true", userId);
     }
 
