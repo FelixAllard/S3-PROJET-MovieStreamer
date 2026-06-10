@@ -3,6 +3,8 @@ package ca.usherbrooke.fgen.api.business;
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Data.UserData;
 import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -64,5 +66,44 @@ public class UserBusinessTest {
 
         assertNull(result);
         verify(userData, times(1)).getUserByUserId(99L);
+    }
+
+    @Test
+    void postRatingByUserAndMovieID_delegueAUserDataEtRetourneWMU() {
+        // Arrange
+        WatchMovieUser mockWmu = new WatchMovieUser();
+        mockWmu.setRating(4);
+
+        when(userData.postRatingByUserAndMovieID(5L, 10L, 4)).thenReturn(mockWmu);
+
+        // Act
+        WatchMovieUser result = userBusiness.postRatingByUserAndMovieID(5L, 10L, 4);
+
+        // Assert
+        assertNotNull(result);
+        verify(userData, times(1)).postRatingByUserAndMovieID(5L, 10L, 4);
+    }
+
+    @Test
+    void postRatingByUserAndMovieID_ThrowLesBonnesExceptions(){
+        WebApplicationException userIdNegatif = assertThrows(WebApplicationException.class, () ->
+                userBusiness.postRatingByUserAndMovieID(-1L, 10L, 4)
+        );
+        assertEquals(422, userIdNegatif.getResponse().getStatus());
+
+        WebApplicationException movieIdNegatif = assertThrows(WebApplicationException.class, () ->
+                userBusiness.postRatingByUserAndMovieID(5L, -1L, 4)
+        );
+        assertEquals(422, movieIdNegatif.getResponse().getStatus());
+
+        WebApplicationException ratingTropGrand = assertThrows(WebApplicationException.class, () ->
+                userBusiness.postRatingByUserAndMovieID(5L, 10L, 11)
+        );
+        assertEquals(422, ratingTropGrand.getResponse().getStatus());
+
+        WebApplicationException ratingNegatif = assertThrows(WebApplicationException.class, () ->
+                userBusiness.postRatingByUserAndMovieID(5L, 10L, -1)
+        );
+        assertEquals(422, ratingNegatif.getResponse().getStatus());
     }
 }
