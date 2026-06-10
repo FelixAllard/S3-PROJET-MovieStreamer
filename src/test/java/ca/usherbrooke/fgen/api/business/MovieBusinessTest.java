@@ -8,7 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -111,5 +113,43 @@ public class MovieBusinessTest {
 
         assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName("Inexistant"));
         verify(movieData, times(1)).getMovieByMovieName("Inexistant");
+    }
+
+    @Test
+    void getMovieRatingByMovieId_FormatteLesRatingsEtCalculeLeBonAverage(){
+        //Arrange
+        List<Object[]> ratings = List.of(new Object[] {1,2L}, new Object[] {2,1L}, new Object[] {3,1L}, new Object[] {4,8L});
+
+        when(movieData.getMovieRatingByMovieId(1L)).thenReturn(ratings);
+
+        //Act
+        Map<String, Object> result = movieBusiness.getMovieRatingByMovieId(1L);
+
+        //Assert
+        assertNotNull(result);
+        assertEquals(3.25, result.get("average"));
+
+        // Vérifier le formattage
+        List<Map<String, Object>> distribution = (List<Map<String, Object>>) result.get("distribution");
+        assertEquals(4, distribution.size());
+        assertEquals(1, distribution.get(0).get("rating"));
+        assertEquals(2L, distribution.get(0).get("count"));
+    }
+
+    @Test
+    void getMovieRatingByMovieId_ThrowLesBonnesExceptions(){
+        //Arrange
+        when(movieData.getMovieRatingByMovieId(1L)).thenReturn(List.of());
+
+        //Assert
+        WebApplicationException exceptionListeVide =
+                assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieRatingByMovieId(1L));
+
+        assertEquals(404, exceptionListeVide.getResponse().getStatus());
+
+        WebApplicationException exceptionIdNegatif =
+                assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieRatingByMovieId(-1L));
+
+        assertEquals(422, exceptionIdNegatif.getResponse().getStatus());
     }
 }

@@ -6,7 +6,10 @@ import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class MovieBusiness {
@@ -42,5 +45,37 @@ public class MovieBusiness {
             ExceptionUtils.throwException(404, "Movie Not Found");
 
         return movie;
+    }
+
+    public Map<String, Object> getMovieRatingByMovieId(long id) {
+        if(id <= 0)
+            ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");
+
+        List<Object[]> rawRatings = movieData.getMovieRatingByMovieId(id);
+
+        if(rawRatings.isEmpty())
+            ExceptionUtils.throwException(404, "No ratings found for this movie");
+
+        List<Map<String, Object>> distribution = new ArrayList<>();
+        double totalRatings = 0;
+        double totalCount = 0;
+
+        for (Object[] r : rawRatings) {
+            int rating = (int) r[0];
+            long count = (long) r[1];
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("rating", rating);
+            row.put("count", count);
+            distribution.add(row);
+
+            totalRatings += rating * count;
+            totalCount += count;
+        }
+
+        Map<String, Object> formattedRatings = new HashMap<>();
+        formattedRatings.put("average", totalRatings / totalCount);
+        formattedRatings.put("distribution", distribution);
+        return formattedRatings;
     }
 }
