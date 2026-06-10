@@ -2,11 +2,14 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository; // Adjust name/package if your DAO is named differently
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -109,5 +112,36 @@ public class MovieDataTest {
         assertNull(result);
         verify(movieRepository, times(1)).find("title", "Inexistant");
         verify(query, times(1)).firstResult();
+    }
+
+    @Test
+    void getMovieRatingByMovieId_delegueAuRepoEtRetourneRatings(){
+        // Arrange
+        Movie movie = new Movie();
+        List<Object[]> ratings = List.of();
+
+        when(movieRepository.findById(1L)).thenReturn(movie);
+        when(movieRepository.getRatingDistributionByMovieId(1L)).thenReturn(ratings);
+
+        // Act
+        List<Object[]> result = movieData.getMovieRatingByMovieId(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(ratings, result);
+        verify(movieRepository, times(1)).getRatingDistributionByMovieId(1L);
+    }
+
+    @Test
+    void getMovieRatingByMovieId_retourne404SiFilmInexistant() {
+        // Arrange
+        when(movieRepository.findById(1L)).thenReturn(null);
+
+        // Act & Assert
+        WebApplicationException exception = assertThrows(WebApplicationException.class, () -> {
+            movieData.getMovieRatingByMovieId(1L);
+        });
+
+        assertEquals(404, exception.getResponse().getStatus());
     }
 }

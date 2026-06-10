@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.ExceptionUtils;
 import org.mockito.Mockito;
 
 import java.util.List;

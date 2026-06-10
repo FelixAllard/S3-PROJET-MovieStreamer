@@ -36,12 +36,12 @@ public class WatchMovieUserBusinessTest {
     }
 
     @Test
-    void validateUserExists_lanceException400_siIdInvalide() {
+    void validateUserExists_lanceException422_siIdInvalide() {
         WebApplicationException exception = assertThrows(
                 WebApplicationException.class,
                 () -> watchMovieUserBusiness.getUserSavedListByUserId(-5L)
         );
-        assertEquals(400, exception.getResponse().getStatus());
+        assertEquals(422, exception.getResponse().getStatus());
         verifyNoInteractions(watchMovieUserData);
     }
 

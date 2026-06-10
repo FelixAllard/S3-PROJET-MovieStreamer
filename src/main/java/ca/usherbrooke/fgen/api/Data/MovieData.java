@@ -3,6 +3,8 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
+import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
@@ -29,5 +31,14 @@ public class MovieData {
 
     public Movie getMovieByMovieName(String name) {
         return movieRepository.find("title", name).firstResult();
+    }
+
+    public List<Object[]> getMovieRatingByMovieId(long id) {
+        Movie movie = movieRepository.findById(id);
+
+        if(movie == null)
+            ExceptionUtils.throwException(404, "Movie Not Found");
+
+        return movieRepository.getRatingDistributionByMovieId(id);
     }
 }

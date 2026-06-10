@@ -12,6 +12,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
+import java.util.Map;
 
 @Path("/api/movie")
 @RolesAllowed({"admin"})
@@ -60,6 +61,14 @@ public class MoviePresentation {
     public Response getMovieByMovieName(@PathParam("name") String name) {
         Movie movie = movieBusiness.getMovieByMovieName(name);
         return Response.ok(movie).build();
+    }
+
+    @GET
+    @Path("{id}/rating")
+    @PermitAll
+    public Response getMovieRatingByMovieId(@PathParam("id") long id){
+        Map<String, Object> ratings = movieBusiness.getMovieRatingByMovieId(id);
+        return Response.ok(ratings).build();
     }
 
 }
