@@ -8,7 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -95,5 +97,23 @@ public class MoviePresentationTest {
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(movie, response.getEntity());
         verify(movieBusiness, times(1)).getMovieByMovieName("Interstellar");
+    }
+
+    @Test
+    void getMovieRatingByMovieId_retourne200AvecRatings(){
+        // Arrange
+        Map<String, Object> mockRatings = new HashMap<>();
+        mockRatings.put("average", 3.8);
+        mockRatings.put("distribution", List.of());
+
+        when(movieBusiness.getMovieRatingByMovieId(1L)).thenReturn(mockRatings);
+
+        // Act
+        Response response = moviePresentation.getMovieRatingByMovieId(1L);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(mockRatings, response.getEntity());
+        verify(movieBusiness, times(1)).getMovieRatingByMovieId(1L);
     }
 }

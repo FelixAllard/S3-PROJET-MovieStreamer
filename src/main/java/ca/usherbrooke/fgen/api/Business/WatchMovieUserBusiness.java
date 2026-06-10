@@ -22,7 +22,7 @@ public class WatchMovieUserBusiness {
 
     private void validateUserExists(long userId) {
         if (userId <= 0) {
-            ExceptionUtils.throwException(400, "Invalid User ID");
+            ExceptionUtils.throwException(422, "Invalid User ID");
         }
         if (userBusiness.getUserByUserId(userId) == null) {
             ExceptionUtils.throwException(404, "User does not exist in the database (has been deleted or was never created)");
