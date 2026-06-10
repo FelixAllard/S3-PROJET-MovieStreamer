@@ -2,7 +2,10 @@ package ca.usherbrooke.fgen.api.business;
 
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Data.UserData;
+import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -64,5 +67,27 @@ public class UserBusinessTest {
 
         assertNull(result);
         verify(userData, times(1)).getUserByUserId(99L);
+    }
+
+    @Test
+    void updateUserRatingByUserId_PositiveTest()
+    {
+        User user = new User();
+        user.id = 1L;
+        when(userData.updateUserRatingByUserId(1L, 2L, 3)).thenReturn(user);
+
+        User result = userBusiness.updateUserRatingByUserId(1L, 2L, 3);
+
+        assertNotNull(result);
+        assertEquals(user.id, result.id);
+        verify(userData, times(1)).updateUserRatingByUserId(1L, 2L, 3);
+    }
+
+    @Test
+    void updateUserRatingByUserId_NegativeTest()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            User result = userBusiness.updateUserRatingByUserId(1L, 2L, 11);
+        });
     }
 }

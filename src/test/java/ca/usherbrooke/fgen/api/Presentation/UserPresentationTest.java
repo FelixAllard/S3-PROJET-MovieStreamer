@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Business.UserService;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
@@ -89,5 +90,18 @@ public class UserPresentationTest {
         );
 
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), exception.getResponse().getStatus());
+    }
+
+    @Test
+    void updateUserRatingByUserId_PositiveTest()
+    {
+        User user = new User();
+        user.id = 1L;
+        when(userBusiness.updateUserRatingByUserId(1L, 2L, 3)).thenReturn(user);
+
+        Response response = userPresentation.updateUserRatingByUserId(1L, 2L, 3);
+
+        assertEquals(200, response.getStatus());
+        verify(userBusiness, times(1)).updateUserRatingByUserId(1L, 2L, 3);
     }
 }

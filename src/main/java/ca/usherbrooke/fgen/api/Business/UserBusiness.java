@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.UserData;
 import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -29,4 +30,9 @@ public class UserBusiness {
         return userData.getUserByUserId(id);
     }
 
+    public User updateUserRatingByUserId(long userId, long movieId, int newRating) {
+        if (newRating > 10 || newRating < 0)
+            ExceptionUtils.throwException(400, "Rating does not respect 0 to 10 range");
+        return userData.updateUserRatingByUserId(userId, movieId, newRating);
+    }
 }
