@@ -7,11 +7,11 @@ INSERT INTO app.tag (name) VALUES
 
 -- Movies
 INSERT INTO app.movie (title, description, year, movieLength, thumbnail, director, writer, studio, language) VALUES
-('Interstellar', 'A team of explorers travel through a wormhole in space.', 2014, 169.0, 'interstellar.jpg', 'Christopher Nolan', 'Jonathan Nolan', 'Paramount', 'English'),
-('The Matrix', 'A computer hacker learns from mysterious rebels about the true nature of his reality.', 1999, 136.0, 'matrix.jpg', 'Lana Wachowski', 'Lilly Wachowski', 'Warner Bros.', 'English'),
-('Inception', 'A thief who steals corporate secrets through the use of dream-sharing technology.', 2010, 148.0, 'inception.jpg', 'Christopher Nolan', 'Christopher Nolan', 'Warner Bros.', 'English'),
-('The Dark Knight', 'When the menace known as the Joker wreaks havoc on Gotham.', 2008, 152.0, 'dark_knight.jpg', 'Christopher Nolan', 'Jonathan Nolan', 'Warner Bros.', 'English'),
-('Superbad', 'Two co-dependent high school seniors are forced to deal with separation anxiety.', 2007, 113.0, 'superbad.jpg', 'Greg Mottola', 'Seth Rogen', 'Columbia Pictures', 'English');
+('Interstellar', 'A team of explorers travel through a wormhole in space.', 2014, 169.0, 'https://tse3.mm.bing.net/th/id/OIP.Z6aUuDLMpZtMYF1y9LYqSwHaLH?cb=thfvnextfalcon2&rs=1&pid=ImgDetMain&o=7&rm=3', 'Christopher Nolan', 'Jonathan Nolan', 'Paramount', 'English'),
+('The Matrix', 'A computer hacker learns from mysterious rebels about the true nature of his reality.', 1999, 136.0, 'https://th.bing.com/th/id/R.d60d296c62dc75447bbafed62451f246?rik=sdz68QwhV9VbnQ&riu=http%3a%2f%2fshatthemovies.com%2fwp-content%2fuploads%2f2017%2f10%2fhEpWvX6Bp79eLxY1kX5ZZJcme5U.jpg&ehk=rCEZalvHRg9Hzt4V6IzDGmsbn2d8Oom5JJYSTQH3NNw%3d&risl=&pid=ImgRaw&r=0', 'Lana Wachowski', 'Lilly Wachowski', 'Warner Bros.', 'English'),
+('Inception', 'A thief who steals corporate secrets through the use of dream-sharing technology.', 2010, 148.0, 'https://cdn.shopify.com/s/files/1/1416/8662/products/inception_2010_imax_original_film_art_2000x.jpg?v=1551890318', 'Christopher Nolan', 'Christopher Nolan', 'Warner Bros.', 'English'),
+('The Dark Knight', 'When the menace known as the Joker wreaks havoc on Gotham.', 2008, 152.0, 'https://tse1.mm.bing.net/th/id/OIP.1AjXRjwX74DedUFn5sBnXgHaJ4?cb=thfvnextfalcon2&rs=1&pid=ImgDetMain&o=7&rm=3', 'Christopher Nolan', 'Jonathan Nolan', 'Warner Bros.', 'English'),
+('Superbad', 'Two co-dependent high school seniors are forced to deal with separation anxiety.', 2007, 113.0, 'https://image.tmdb.org/t/p/original/2pcIeB50XjM8x0V5Wv6r6VAvArM.jpg', 'Greg Mottola', 'Seth Rogen', 'Columbia Pictures', 'English');
 
 -- Map Movies to Tags (Movie/Tag Bridge Table)
 INSERT INTO app.movie_tags (movie_id, tag_id) VALUES
