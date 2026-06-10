@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Presentation;
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -89,5 +90,28 @@ public class UserPresentationTest {
         );
 
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), exception.getResponse().getStatus());
+    }
+
+    @Test
+    void postRatingByUserAndMovieID_retourneStatus200AvecWMU() {
+        // Arrange
+        WatchMovieUser mockWmu = new WatchMovieUser();
+        mockWmu.setRating(4);
+
+        User mockUser = new User();
+        mockUser.setId(5L);
+        mockUser.setKeycloakId("mocked-uuid-1111");
+
+        when(securityContext.isUserInRole("admin")).thenReturn(true);
+        when(userBusiness.getUserByUserId(5L)).thenReturn(mockUser);
+        when(userBusiness.postRatingByUserAndMovieID(5L, 10L, 4)).thenReturn(mockWmu);
+
+        // Act
+        Response response = userPresentation.postRatingByUserAndMovieID(5L, 10L, 4);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(mockWmu, response.getEntity());
+        verify(userBusiness, times(1)).postRatingByUserAndMovieID(5L, 10L, 4);
     }
 }
