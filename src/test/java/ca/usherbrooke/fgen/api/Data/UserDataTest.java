@@ -1,5 +1,6 @@
 package ca.usherbrooke.fgen.api.Data;
 
+import ca.usherbrooke.fgen.api.DAO.MovieRepository;
 import ca.usherbrooke.fgen.api.DAO.UserRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.Tag;
@@ -19,12 +20,14 @@ import static org.mockito.Mockito.*;
 public class UserDataTest {
 
     private UserRepository userRepository;
+    private MovieRepository movieRepository;
     private UserData userData;
 
     @BeforeEach
     void setUp() {
         userRepository = Mockito.mock(UserRepository.class);
-        userData = new UserData(userRepository);
+        movieRepository = Mockito.mock(MovieRepository.class);
+        userData = new UserData(userRepository, movieRepository);
     }
 
     @Test
@@ -87,7 +90,7 @@ public class UserDataTest {
 
         when(userRepository.findById(1L)).thenReturn(u1);
 
-        User result = userData.updateUserRatingByUserId(1L, 1L, 3);
+        WatchMovieUser result = userData.updateUserRatingByUserId(1L, 1L, 3);
 
         assertNotNull(result);
         assertEquals(3, watchMovieUser.getRating());
@@ -95,7 +98,7 @@ public class UserDataTest {
     }
 
     @Test
-    void updateUserRatingByUserId_negativeUser()
+    void updateUserRatingByUserId_UserDoesNotExist()
     {
         User u1 = new User();
         u1.id = 100L;
@@ -103,12 +106,12 @@ public class UserDataTest {
         when(userRepository.findById(100L)).thenReturn(null);
 
         assertThrows(WebApplicationException.class, () -> {
-            User result = userData.updateUserRatingByUserId(100L, 2L, 3);
+            WatchMovieUser result = userData.updateUserRatingByUserId(100L, 2L, 3);
         });
     }
 
     @Test
-    void updateUserRatingByUserId_negativeMovie()
+    void updateUserRatingByUserId_WatchMovieDoesNotExist()
     {
         User u1 = new User();
         u1.id = 1L;
@@ -117,7 +120,38 @@ public class UserDataTest {
         when(userRepository.findById(1L)).thenReturn(u1);
 
         assertThrows(WebApplicationException.class, () -> {
-            User result = userData.updateUserRatingByUserId(1L, 200L, 3);
+            WatchMovieUser result = userData.updateUserRatingByUserId(1L, 200L, 3);
         });
+    }
+
+    @Test
+    void updateUserRatingByUserId_MovieDoesNotExist()
+    {
+        User u1 = new User();
+        u1.id = 1L;
+        u1.watchedMovieUsers = new ArrayList<>();
+
+        when(userRepository.findById(1L)).thenReturn(u1);
+        when(movieRepository.findById(200L)).thenReturn(null);
+
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userData.updateUserRatingByUserId(1L, 200L, 3);
+        });
+        verify(movieRepository, times(1)).findById(200L);
+    }
+
+    @Test
+    void updateUserRatingByUserId_CreatedWatchMoviePositive()
+    {
+        User u1 = new User();
+        u1.id = 1L;
+        u1.watchedMovieUsers = new ArrayList<>();
+
+        when(userRepository.findById(1L)).thenReturn(u1);
+        when(movieRepository.findById(200L)).thenReturn(new Movie());
+
+        WatchMovieUser result = userData.updateUserRatingByUserId(1L, 200L, 3);
+        verify(movieRepository, times(1)).findById(200L);
+        assertEquals(result.user.id, 1L);
     }
 }

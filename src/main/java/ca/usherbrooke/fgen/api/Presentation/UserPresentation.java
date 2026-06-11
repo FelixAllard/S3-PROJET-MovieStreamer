@@ -37,6 +37,7 @@ public class UserPresentation {
         this.userService = userService;
     }
 
+
     @GET()
     @Path("ping")
     @PermitAll
@@ -62,13 +63,15 @@ public class UserPresentation {
     }
 
     @PUT
-    @Path("{movieId}/{userId}/rating")
+    @Path("{movieId}/{userId}/{newRating}")
     @RolesAllowed({"user", "admin"})
     public Response updateUserRatingByUserId(@PathParam("userId") long id,
                                              @PathParam("movieId") long movieId,
-                                             int newRating)
+                                             @PathParam("newRating") int newRating)
     {
-        User updated = userBusiness.updateUserRatingByUserId(id, movieId, newRating);
+        SecurityUtils.verifyOwnershipOrAdmin(id, userBusiness, jwt, securityContext);
+        ca.usherbrooke.fgen.api.Entities.WatchMovieUser updated =
+                userBusiness.updateUserRatingByUserId(id, movieId, newRating);
         return Response.ok(updated).build();
     }
 }

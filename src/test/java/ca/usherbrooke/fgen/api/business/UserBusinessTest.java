@@ -5,6 +5,7 @@ import ca.usherbrooke.fgen.api.Data.UserData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,22 +73,47 @@ public class UserBusinessTest {
     @Test
     void updateUserRatingByUserId_PositiveTest()
     {
-        User user = new User();
-        user.id = 1L;
-        when(userData.updateUserRatingByUserId(1L, 2L, 3)).thenReturn(user);
+        WatchMovieUser watchMovieUser = new WatchMovieUser();
+        watchMovieUser.id =100l;
 
-        User result = userBusiness.updateUserRatingByUserId(1L, 2L, 3);
+        when(userData.updateUserRatingByUserId(1L, 2L, 3)).thenReturn(watchMovieUser);
+
+        WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, 2L, 3);
 
         assertNotNull(result);
-        assertEquals(user.id, result.id);
+        assertEquals(watchMovieUser.id, result.id);
         verify(userData, times(1)).updateUserRatingByUserId(1L, 2L, 3);
     }
 
     @Test
-    void updateUserRatingByUserId_NegativeTest()
+    void updateUserRatingByUserId_RatingTooHigh()
     {
         assertThrows(WebApplicationException.class, () -> {
-            User result = userBusiness.updateUserRatingByUserId(1L, 2L, 11);
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, 2L, 11);
+        });
+    }
+
+    @Test
+    void updateUserRatingByUserId_RatingTooLow()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, 2L, -1);
+        });
+    }
+
+    @Test
+    void updateUserRatingByUserId_UserIdNegative()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(-1L, 2L, 3);
+        });
+    }
+
+    @Test
+    void updateUserRatingByUserId_MovieIdNegative()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, -2L, 3);
         });
     }
 }
