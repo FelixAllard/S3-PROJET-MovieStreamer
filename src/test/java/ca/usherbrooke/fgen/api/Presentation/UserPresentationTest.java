@@ -2,7 +2,10 @@ package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Business.UserService;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
+import ca.usherbrooke.fgen.api.Utils.SecurityUtils;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -31,10 +34,23 @@ public class UserPresentationTest {
         jwt = Mockito.mock(JsonWebToken.class);
         securityContext = Mockito.mock(SecurityContext.class);
 
-        userPresentation = new UserPresentation(userBusiness, userService);
+
+
+        userPresentation = new UserPresentation(
+                userBusiness,
+                userService);
 
         userPresentation.jwt = jwt;
         userPresentation.securityContext = securityContext;
+
+    }
+    private void mockAdminAccess(long userId) {
+        User user = new User();
+        user.setId(userId);
+        user.setKeycloakId("admin-uuid-bypass");
+
+        when(securityContext.isUserInRole("admin")).thenReturn(true);
+        when(userBusiness.getUserByUserId(userId)).thenReturn(user);
     }
 
     @Test
@@ -90,5 +106,23 @@ public class UserPresentationTest {
         );
 
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), exception.getResponse().getStatus());
+    }
+
+    @Test
+    void updateUserRatingByUserId_PositiveTest()
+    {
+        User user = new User();
+        user.id = 1L;
+        mockAdminAccess(user.id);
+
+        WatchMovieUser watchMovieUser = new WatchMovieUser();
+        watchMovieUser.id =1L;
+
+        when(userBusiness.updateUserRatingByUserId(1L, 2L, 3)).thenReturn(watchMovieUser);
+
+        Response response = userPresentation.updateUserRatingByUserId(1L, 2L, 3);
+
+        assertEquals(200, response.getStatus());
+        verify(userBusiness, times(1)).updateUserRatingByUserId(1L, 2L, 3);
     }
 }

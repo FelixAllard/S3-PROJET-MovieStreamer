@@ -65,4 +65,5 @@ public class WatchMovieUserBusiness {
 
         return interaction.getRating();
     }
+
 }

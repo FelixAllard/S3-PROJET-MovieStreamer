@@ -2,7 +2,11 @@ package ca.usherbrooke.fgen.api.business;
 
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Data.UserData;
+import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
+import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -64,5 +68,52 @@ public class UserBusinessTest {
 
         assertNull(result);
         verify(userData, times(1)).getUserByUserId(99L);
+    }
+
+    @Test
+    void updateUserRatingByUserId_PositiveTest()
+    {
+        WatchMovieUser watchMovieUser = new WatchMovieUser();
+        watchMovieUser.id =100l;
+
+        when(userData.updateUserRatingByUserId(1L, 2L, 3)).thenReturn(watchMovieUser);
+
+        WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, 2L, 3);
+
+        assertNotNull(result);
+        assertEquals(watchMovieUser.id, result.id);
+        verify(userData, times(1)).updateUserRatingByUserId(1L, 2L, 3);
+    }
+
+    @Test
+    void updateUserRatingByUserId_RatingTooHigh()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, 2L, 11);
+        });
+    }
+
+    @Test
+    void updateUserRatingByUserId_RatingTooLow()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, 2L, -1);
+        });
+    }
+
+    @Test
+    void updateUserRatingByUserId_UserIdNegative()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(-1L, 2L, 3);
+        });
+    }
+
+    @Test
+    void updateUserRatingByUserId_MovieIdNegative()
+    {
+        assertThrows(WebApplicationException.class, () -> {
+            WatchMovieUser result = userBusiness.updateUserRatingByUserId(1L, -2L, 3);
+        });
     }
 }
