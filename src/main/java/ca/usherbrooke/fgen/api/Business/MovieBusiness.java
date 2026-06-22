@@ -86,4 +86,27 @@ public class MovieBusiness {
             ExceptionUtils.throwException(204, "No content");
         return movies;
     }
+    public Movie postMovie(Movie movie) {
+        if(movie == null)
+            ExceptionUtils.throwException(422, "Movie Null");
+        if(movie.description.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Description Empty");
+        if(movie.title == null || movie.title.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Title Empty");
+        if(movie.year < 0)
+            ExceptionUtils.throwException(422, "Movie Year Invalid");
+        if(movie.director == null || movie.director.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Director Empty");
+        if(movie.studio ==null || movie.studio.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Studio Empty");
+        if(movie.writer == null || movie.writer.isEmpty())
+            ExceptionUtils.throwException(422, "Movie WriterEmpty");
+        if(movie.movieLength < 0)
+            ExceptionUtils.throwException(422, "Movie Length Invalid");
+        if(movie.language == null || movie.language.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Language Empty");
+        if(movie.thumbnail == null || movie.thumbnail.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
+        return movieData.postMovie(movie);
+    }
 }

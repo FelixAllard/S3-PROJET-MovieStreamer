@@ -3,10 +3,12 @@ package ca.usherbrooke.fgen.api.Presentation;
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
@@ -79,4 +81,12 @@ public class MoviePresentation {
         return Response.ok(movies).build();
     }
 
+    @POST
+    @Path("")
+    @RolesAllowed({"admin"})
+    public Response postMovie(Movie movie) {
+        Movie created = movieBusiness.postMovie(movie);
+        return Response.status(Response.Status.CREATED).entity(created).build();
+
+    }
 }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,4 +117,38 @@ public class MoviePresentationTest {
         assertEquals(mockRatings, response.getEntity());
         verify(movieBusiness, times(1)).getMovieRatingByMovieId(1L);
     }
+
+    @Test
+    void getNewMovies_Retourn200(){
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        List<Movie> movies = new ArrayList<>();
+        movies.add(movie);
+
+        when(movieBusiness.getNewMovies(3)).thenReturn(movies);
+
+        // Act
+        Response response = moviePresentation.getNewMovies(3);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(movies, response.getEntity());
+    }
+    @Test
+    void postMovie_Retourn200(){
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        when(movieBusiness.postMovie(movie)).thenReturn(movie);
+
+        // Act
+        Response response = moviePresentation.postMovie(movie);
+
+        // Assert
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertEquals(movie, response.getEntity());
+    }
+
+
+
+
 }

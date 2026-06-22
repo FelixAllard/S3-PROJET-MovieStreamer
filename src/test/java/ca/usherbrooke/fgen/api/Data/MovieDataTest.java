@@ -1,6 +1,7 @@
 package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository; // Adjust name/package if your DAO is named differently
+import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -23,7 +24,9 @@ public class MovieDataTest {
     @BeforeEach
     void setUp() {
         movieRepository = Mockito.mock(MovieRepository.class);
+
         movieData = new MovieData(movieRepository);
+
     }
 
     @Test
@@ -143,5 +146,46 @@ public class MovieDataTest {
         });
 
         assertEquals(404, exception.getResponse().getStatus());
+    }
+
+    @Test
+    void shouldCreateMovieSuccessfully() {
+
+        Movie movie = new Movie();
+        movie.title = "Inception";
+        movie.description = "Dream movie";
+        movie.year = 2010;
+        movie.director = "Nolan";
+        movie.studio = "WB";
+        movie.writer = "Nolan";
+        movie.movieLength = 120;
+        movie.language = "English";
+        movie.thumbnail = "img.jpg";
+
+        // No duplicate title
+        when(movieRepository.count("title", movie.title)).thenReturn(0L);
+
+        Movie result = movieData.postMovie(movie);
+
+        assertNotNull(result);
+
+        verify(movieRepository).persist(movie);
+
+        assertNull(movie.getTags());
+        assertNull(movie.getWatchedMovieUsers());
+    }
+    @Test
+    void shouldThrowExceptionWhenTitleAlreadyExists() {
+
+        Movie movie = new Movie();
+        movie.title = "Inception";
+
+        when(movieRepository.count("title", movie.title)).thenReturn(1L);
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> movieData.postMovie(movie)
+        );
+
     }
 }

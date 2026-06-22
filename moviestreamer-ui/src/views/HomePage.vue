@@ -34,10 +34,6 @@ import AnimatedTitle from "../components/AnimatedTitle.vue";
           </button>
         </RouterLink>
 
-
-
-
-
       </div>
 
     </section>
