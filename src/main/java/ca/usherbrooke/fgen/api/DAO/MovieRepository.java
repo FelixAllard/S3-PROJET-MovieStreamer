@@ -15,4 +15,11 @@ public class MovieRepository implements PanacheRepository<Movie> {
                 .setParameter(1, id)
                 .getResultList();
     }
+    public List<Movie> findNewestMovies(int limit) {
+        return getEntityManager().createQuery(
+                        "SELECT m FROM Movie m ORDER BY m.year DESC",
+                        Movie.class)
+                .setMaxResults(limit)
+                .getResultList();
+    }
 }

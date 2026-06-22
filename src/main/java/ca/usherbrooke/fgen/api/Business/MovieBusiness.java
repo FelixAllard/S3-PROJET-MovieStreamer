@@ -78,4 +78,12 @@ public class MovieBusiness {
         formattedRatings.put("distribution", distribution);
         return formattedRatings;
     }
+    public List<Movie> getNewMovies(int number){
+        if(number <= 0)
+            ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");
+        List<Movie> movies = movieData.getNewMovies(number);
+        if(movies.isEmpty())
+            ExceptionUtils.throwException(204, "No content");
+        return movies;
+    }
 }

@@ -41,4 +41,8 @@ public class MovieData {
 
         return movieRepository.getRatingDistributionByMovieId(id);
     }
+    public List<Movie> getNewMovies(int number){
+
+        return movieRepository.findNewestMovies(number);
+    }
 }

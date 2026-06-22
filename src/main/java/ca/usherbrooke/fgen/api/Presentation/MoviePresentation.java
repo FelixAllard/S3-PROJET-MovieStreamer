@@ -71,4 +71,12 @@ public class MoviePresentation {
         return Response.ok(ratings).build();
     }
 
+    @GET
+    @Path("new/{number}")
+    @PermitAll
+    public Response getNewMovies(@PathParam("number") int number){
+        List<Movie> movies = movieBusiness.getNewMovies(number);
+        return Response.ok(movies).build();
+    }
+
 }
