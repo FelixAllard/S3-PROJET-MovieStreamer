@@ -6,11 +6,15 @@ import ca.usherbrooke.fgen.api.Entities.Movie;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -24,6 +28,25 @@ public class MovieBusinessTest {
     void setUp() {
         movieData = Mockito.mock(MovieData.class);
         movieBusiness = new MovieBusiness(movieData);
+    }
+
+    static Movie createValidMovie() {
+        Movie m = new Movie();
+        m.title = "Inception";
+        m.description = "A dream within a dream";
+        m.year = 2010;
+        m.director = "Christopher Nolan";
+        m.studio = "Warner Bros";
+        m.writer = "Nolan";
+        m.movieLength = 148;
+        m.language = "English";
+        m.thumbnail = "img.jpg";
+        return m;
+    }
+    static Movie movieWith(java.util.function.Consumer<Movie> modifier) {
+        Movie m = createValidMovie();
+        modifier.accept(m);
+        return m;
     }
 
     @Test
@@ -152,4 +175,95 @@ public class MovieBusinessTest {
 
         assertEquals(422, exceptionIdNegatif.getResponse().getStatus());
     }
+
+
+    @ParameterizedTest
+    @MethodSource("invalidMovies")
+    void shouldRejectInvalidMovies(Movie movie, String expectedMessage) {
+
+        RuntimeException ex = assertThrows(
+                WebApplicationException.class,
+                () -> movieBusiness.postMovie(movie)
+        );
+    }
+
+    // ----------------------------
+    // TEST DATA ITERATION
+    // ----------------------------
+    static Stream<Arguments> invalidMovies() {
+
+        Movie base = createValidMovie();
+
+        return Stream.of(
+
+                // NULL MOVIE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        null,
+                        "Movie Null"
+                ),
+
+                // EMPTY TITLE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.title = ""),
+                        "Movie Title Empty"
+                ),
+
+                // NULL TITLE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.title = null),
+                        "Movie Title Empty"
+                ),
+
+                // EMPTY DESCRIPTION
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.description = ""),
+                        "Movie Description Empty"
+                ),
+
+                // INVALID YEAR
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.year = -1),
+                        "Movie Year Invalid"
+                ),
+
+                // EMPTY DIRECTOR
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.director = ""),
+                        "Movie Director Empty"
+                ),
+
+                // EMPTY STUDIO
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.studio = ""),
+                        "Movie Studio Empty"
+                ),
+
+                // EMPTY WRITER
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.writer = ""),
+                        "Movie WriterEmpty"
+                ),
+
+                // INVALID LENGTH
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.movieLength = -10),
+                        "Movie Length Invalid"
+                ),
+
+                // EMPTY LANGUAGE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.language = ""),
+                        "Movie Language Empty"
+                ),
+
+                // EMPTY THUMBNAIL
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.thumbnail = ""),
+                        "Movie Thumbnail Empty"
+                )
+        );
+    }
+
+
+
 }

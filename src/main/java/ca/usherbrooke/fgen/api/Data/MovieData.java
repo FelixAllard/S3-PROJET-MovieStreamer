@@ -2,10 +2,14 @@ package ca.usherbrooke.fgen.api.Data;
 
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository;
+import ca.usherbrooke.fgen.api.DAO.TagRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+
 
 import java.util.List;
 
@@ -13,8 +17,10 @@ import java.util.List;
 public class MovieData {
     private final MovieRepository movieRepository;
 
+
     public MovieData(MovieRepository movieRepository) {
         this.movieRepository = movieRepository;
+
     }
 
     public String ping(){
@@ -40,5 +46,21 @@ public class MovieData {
             ExceptionUtils.throwException(404, "Movie Not Found");
 
         return movieRepository.getRatingDistributionByMovieId(id);
+    }
+    public List<Movie> getNewMovies(int number){
+
+        return movieRepository.findNewestMovies(number);
+    }
+    @Transactional
+    public Movie postMovie(Movie movie){
+        if (movieRepository.count("title", movie.title) > 0)
+            ExceptionUtils.throwException(409, "title Name Already Exists");
+
+        movie.setId(null);
+        movie.setTags(null);
+        movie.setWatchedMovieUsers(null);
+
+        movieRepository.persist(movie);
+        return movie;
     }
 }

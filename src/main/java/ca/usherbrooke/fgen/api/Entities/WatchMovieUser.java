@@ -12,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "watch_movie_user", schema = "app")
+@Table(name = "watch_movie_user", schema = "app", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "movie_id"}))
 public class WatchMovieUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
