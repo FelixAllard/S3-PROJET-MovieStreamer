@@ -3,11 +3,18 @@ package ca.usherbrooke.fgen.api.business;
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Data.MovieData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,6 +28,25 @@ public class MovieBusinessTest {
     void setUp() {
         movieData = Mockito.mock(MovieData.class);
         movieBusiness = new MovieBusiness(movieData);
+    }
+
+    static Movie createValidMovie() {
+        Movie m = new Movie();
+        m.title = "Inception";
+        m.description = "A dream within a dream";
+        m.year = 2010;
+        m.director = "Christopher Nolan";
+        m.studio = "Warner Bros";
+        m.writer = "Nolan";
+        m.movieLength = 148;
+        m.language = "English";
+        m.thumbnail = "img.jpg";
+        return m;
+    }
+    static Movie movieWith(java.util.function.Consumer<Movie> modifier) {
+        Movie m = createValidMovie();
+        modifier.accept(m);
+        return m;
     }
 
     @Test
@@ -104,4 +130,159 @@ public class MovieBusinessTest {
         assertFalse(result);
         verify(movieData, times(1)).deleteMovieByMovieId(99L);
     }
+
+    void getMovieByMovieName_delegueAMovieDataEtRetourneMovie() {
+        Movie movie = new Movie();
+        movie.title = "Interstellar";
+        when(movieData.getMovieByMovieName("Interstellar")).thenReturn(movie);
+
+        Movie result = movieBusiness.getMovieByMovieName("Interstellar");
+
+        assertNotNull(result);
+        assertEquals("Interstellar", result.title);
+        verify(movieData, times(1)).getMovieByMovieName("Interstellar");
+    }
+
+    @Test
+    void getMovieByMovieName_nameNullOuVideLanceException() {
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName(null));
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName(""));
+    }
+
+    @Test
+    void getMovieByMovieName_movieInexistantLanceException() {
+        when(movieData.getMovieByMovieName("Inexistant")).thenReturn(null);
+
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieByMovieName("Inexistant"));
+        verify(movieData, times(1)).getMovieByMovieName("Inexistant");
+    }
+
+    @Test
+    void getMovieRatingByMovieId_FormatteLesRatingsEtCalculeLeBonAverage(){
+        //Arrange
+        List<Object[]> ratings = List.of(new Object[] {1,2L}, new Object[] {2,1L}, new Object[] {3,1L}, new Object[] {4,8L});
+
+        when(movieData.getMovieRatingByMovieId(1L)).thenReturn(ratings);
+
+        //Act
+        Map<String, Object> result = movieBusiness.getMovieRatingByMovieId(1L);
+
+        //Assert
+        assertNotNull(result);
+        assertEquals(3.25, result.get("average"));
+
+        // Vérifier le formattage
+        List<Map<String, Object>> distribution = (List<Map<String, Object>>) result.get("distribution");
+        assertEquals(4, distribution.size());
+        assertEquals(1, distribution.get(0).get("rating"));
+        assertEquals(2L, distribution.get(0).get("count"));
+    }
+
+    @Test
+    void getMovieRatingByMovieId_ThrowLesBonnesExceptions(){
+        //Arrange
+        when(movieData.getMovieRatingByMovieId(1L)).thenReturn(List.of());
+
+        //Assert
+        WebApplicationException exceptionListeVide =
+                assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieRatingByMovieId(1L));
+
+        assertEquals(404, exceptionListeVide.getResponse().getStatus());
+
+        WebApplicationException exceptionIdNegatif =
+                assertThrows(WebApplicationException.class, () -> movieBusiness.getMovieRatingByMovieId(-1L));
+
+        assertEquals(422, exceptionIdNegatif.getResponse().getStatus());
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("invalidMovies")
+    void shouldRejectInvalidMovies(Movie movie, String expectedMessage) {
+
+        RuntimeException ex = assertThrows(
+                WebApplicationException.class,
+                () -> movieBusiness.postMovie(movie)
+        );
+    }
+
+    // ----------------------------
+    // TEST DATA ITERATION
+    // ----------------------------
+    static Stream<Arguments> invalidMovies() {
+
+        Movie base = createValidMovie();
+
+        return Stream.of(
+
+                // NULL MOVIE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        null,
+                        "Movie Null"
+                ),
+
+                // EMPTY TITLE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.title = ""),
+                        "Movie Title Empty"
+                ),
+
+                // NULL TITLE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.title = null),
+                        "Movie Title Empty"
+                ),
+
+                // EMPTY DESCRIPTION
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.description = ""),
+                        "Movie Description Empty"
+                ),
+
+                // INVALID YEAR
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.year = -1),
+                        "Movie Year Invalid"
+                ),
+
+                // EMPTY DIRECTOR
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.director = ""),
+                        "Movie Director Empty"
+                ),
+
+                // EMPTY STUDIO
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.studio = ""),
+                        "Movie Studio Empty"
+                ),
+
+                // EMPTY WRITER
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.writer = ""),
+                        "Movie WriterEmpty"
+                ),
+
+                // INVALID LENGTH
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.movieLength = -10),
+                        "Movie Length Invalid"
+                ),
+
+                // EMPTY LANGUAGE
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.language = ""),
+                        "Movie Language Empty"
+                ),
+
+                // EMPTY THUMBNAIL
+                org.junit.jupiter.params.provider.Arguments.of(
+                        movieWith(m -> m.thumbnail = ""),
+                        "Movie Thumbnail Empty"
+                )
+        );
+    }
+
+
+
 }

@@ -33,15 +33,13 @@ jobs:
       - name: Wait for infrastructure
         run: sleep 20
 
-      # ✅ FIX: remove ":" (not needed)
       - name: Build Quarkus app
-        run: ./gradlew build -x test
-
-      # 🚀 Start app safely
-      - name: Start Quarkus application
         run: |
-          nohup java -jar build/quarkus-app/quarkus-run.jar > app.log 2>&1 &
-          echo $! > app.pid
+          for i in {1..3}; do
+            ./gradlew build -x test && break
+            echo "Build failed, retrying ($i/3)..."
+            sleep 10
+          done
 
       - name: Start Quarkus application
         run: |
@@ -52,7 +50,7 @@ jobs:
           for i in {1..40}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8888/q/health || echo "000")
           
-            if [ "$STATUS" = "500" ]; then
+            if [ "$STATUS" = "200" ]; then
               echo "Application is READY"
               exit 0
             fi

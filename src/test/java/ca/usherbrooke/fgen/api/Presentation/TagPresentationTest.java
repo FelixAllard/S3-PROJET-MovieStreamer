@@ -1,6 +1,7 @@
 package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.TagBusiness;
+import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ public class TagPresentationTest {
 
     private TagBusiness tagBusiness;
     private TagPresentation tagPresentation;
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -25,7 +27,7 @@ public class TagPresentationTest {
         System.out.println("=================================");
 
         tagBusiness = Mockito.mock(TagBusiness.class);
-        tagPresentation = new TagPresentation(tagBusiness);
+        tagPresentation = new TagPresentation(tagBusiness, userService);
     }
 
     @Test
@@ -57,6 +59,20 @@ public class TagPresentationTest {
         assertNotNull(response.getEntity());
         assertTrue(((List<?>) response.getEntity()).isEmpty());
         verify(tagBusiness, times(1)).getAllTags();
+    }
+
+    @Test
+    void getTagByName_retourneStatus200AvecTag() {
+        Tag tag = new Tag();
+        tag.id = 1;
+        tag.name = "Action";
+        when(tagBusiness.getTagByName("Action")).thenReturn(tag);
+
+        Response response = tagPresentation.getTagByName("Action");
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(tag, response.getEntity());
+        verify(tagBusiness, times(1)).getTagByName("Action");
     }
   
     @Test

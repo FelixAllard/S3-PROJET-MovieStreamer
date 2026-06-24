@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.TagData;
 import ca.usherbrooke.fgen.api.Entities.Tag;
+import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -24,8 +25,11 @@ public class TagBusiness {
     }
 
     public Tag postTag(Tag tag) {
-        if(tag.name == null) {throw new WebApplicationException("Name is NULL.", 400);}
-        if(tag.name.isEmpty()) {throw new WebApplicationException("Name is empty.", 400);}
+        if (tag.name == null)
+            ExceptionUtils.throwException(400, "Tag Name Null");
+        if (tag.name.isEmpty())
+            ExceptionUtils.throwException(422, "Tag Name Cannot Be Empty");
+
         return tagData.postTag(tag);
     }
 
@@ -33,57 +37,40 @@ public class TagBusiness {
         return tagData.getAllTags();
     }
 
-    public boolean deleteTagByTagId(int id) {
-        if(id<0)
-            throw new WebApplicationException(
-                    Response.status(422)
-                            .entity("Unprocessable ID: ID cannot be negative")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
+    public Tag getTagByName(String name) {
+        if (name == null)
+            ExceptionUtils.throwException(400, "Tag Name Null");
+        if (name.isEmpty())
+            ExceptionUtils.throwException(422, "Tag Name Cannot Be Empty");
 
+        Tag tag = tagData.getTagByName(name);
+        if (tag == null)
+            ExceptionUtils.throwException(404, "Tag Not Found");
+
+        return tag;
+    }
+
+    public boolean deleteTagByTagId(int id) {
+        if (id < 0)
+            ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");
         return tagData.deleteTagByTagId(id);
 
     }
 
     public Tag updateTagByTagId(int id, Tag updatedTag) {
-        if(id<0)
-            throw new WebApplicationException(
-                    Response.status(422)
-                            .entity("Unprocessable ID: ID cannot be negative")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
-        if(updatedTag==null)
-            throw new WebApplicationException(
-                    Response.status(422)
-                            .entity("Unprocessable Tag: Tag cannot be null")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
-        if(updatedTag.name==null)
-            throw new WebApplicationException(
-                    Response.status(422)
-                            .entity("Tag Name Null")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
+        if (id < 0)
+            ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");
+        if (updatedTag == null)
+            ExceptionUtils.throwException(400, "Unprocessable Tag: Tag cannot be null");
+        if (updatedTag.name == null)
+            ExceptionUtils.throwException(400, "Tag Name Null");
+        if (updatedTag.name.isEmpty())
+            ExceptionUtils.throwException(422, "Tag Name Cannot Be Empty");
 
-        if(updatedTag.name.isEmpty())
-            throw new WebApplicationException(
-                    Response.status(422)
-                            .entity("Incorrect Tag Name: Tag name cannot be empty")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
-
-        if(updatedTag.name.length()>255)
-            throw new WebApplicationException(
-                    Response.status(400)
-                            .entity("Tag Name Too Long")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
+        // TODO: enlever cette validation quand la colonne name sera VARCHAR(255) dans la BD
+        // Actuellement name est TEXT (pas de limite) car Hibernate mappe String → TEXT par défaut
+        if (updatedTag.name.length() > 255)
+            ExceptionUtils.throwException(422, "Tag Name Too Long");
 
         Tag tag = tagData.updateTagByTagId(id, updatedTag);
         return tag;

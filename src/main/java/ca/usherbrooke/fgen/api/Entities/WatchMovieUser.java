@@ -1,14 +1,18 @@
 package ca.usherbrooke.fgen.api.Entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "watch_movie_user", schema = "app")
+@Table(name = "watch_movie_user", schema = "app", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "movie_id"}))
 public class WatchMovieUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,15 +20,17 @@ public class WatchMovieUser {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties("watchedMovies")
+    @JsonIgnore
     public User user;
 
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
+    @JsonIgnore
     public Movie movie;
 
     @Enumerated(EnumType.STRING)
     public MovieStatus status;
 
     public boolean saved;
+    public Integer rating;
 }
