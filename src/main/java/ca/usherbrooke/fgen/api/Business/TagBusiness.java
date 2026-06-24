@@ -5,9 +5,6 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
