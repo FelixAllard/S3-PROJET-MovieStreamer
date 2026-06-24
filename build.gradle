@@ -27,6 +27,7 @@ dependencies {
     // Security & OIDC Authentication
     implementation 'io.quarkus:quarkus-oidc'
     implementation 'io.quarkus:quarkus-security'
+    implementation 'io.quarkus:quarkus-keycloak-admin-rest-client'
 
     // Database: PostgreSQL Driver & Hibernate ORM with Panache
     implementation 'io.quarkus:quarkus-jdbc-postgresql'

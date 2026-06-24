@@ -26,9 +26,9 @@ INSERT INTO app.movie_tags (movie_id, tag_id) VALUES
 (5, 4); -- Superbad -> Comedy
 
 -- Users
-INSERT INTO app.app_user (name, surname, email, keycloak_id) VALUES
-('FN_admin1', 'LN_admin1', 'admin1@admin1.com', '11111111-1111-1111-1111-111111111111'),
-('FN_user2', 'LN_user2', 'user2@user2.com', '22222222-2222-2222-2222-222222222222');
+INSERT INTO app.app_user (username, email, keycloak_id) VALUES
+('admin', 'admin1@admin1.com', '11111111-1111-1111-1111-111111111111'),
+('user', 'user2@user2.com', '22222222-2222-2222-2222-222222222222');
 
 -- User Watchlists & History (User/Movie Bridge Table)
 INSERT INTO app.watch_movie_user (user_id, movie_id, status, saved, rating) VALUES

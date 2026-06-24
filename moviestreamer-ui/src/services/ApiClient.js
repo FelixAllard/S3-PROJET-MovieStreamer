@@ -4,8 +4,11 @@ class ApiClient {
     async request(endpoint, options = {}) {
         const url = `${BASE_URL}${endpoint}`
 
+        const token = localStorage.getItem('token')
+
         const headers = {
             'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             ...options.headers
         }
 
@@ -28,6 +31,12 @@ class ApiClient {
                 errorBody = await response.json()
             } catch {
                 errorBody = await response.text().catch(() => null)
+            }
+
+            if (response.status === 401) {
+                console.warn('[API] Token expired or invalid. Clearing session.')
+                localStorage.removeItem('token')
+                localStorage.removeItem('refresh_token')
             }
 
             const error = new Error(`API Error ${response.status}: ${response.statusText}`)
