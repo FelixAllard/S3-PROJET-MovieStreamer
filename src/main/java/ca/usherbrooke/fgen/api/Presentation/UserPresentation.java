@@ -37,21 +37,13 @@ public class UserPresentation {
     @Path("{id}")
     public Response getUserByUserId(@PathParam("id") long id) {
         User users = userBusiness.getUserByUserId(id);
-        //return 404
-        if(users == null){
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
         return Response.ok(users).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response deleteUserByUserId(@PathParam("id") long id) {
-        boolean isDeleted = userBusiness.deleteUserByUserId(id);
-        if (isDeleted) {
-            return Response.noContent().build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
+        userBusiness.deleteUserByUserId(id);
+        return Response.noContent().build();
     }
 }

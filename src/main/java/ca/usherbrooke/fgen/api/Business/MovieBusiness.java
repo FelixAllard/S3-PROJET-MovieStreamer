@@ -30,6 +30,23 @@ public class MovieBusiness {
     }
 
     public Movie getMovieByMovieId(long id){
+        if(id < 0){
+            throw new WebApplicationException(
+                    Response.status(422)
+                            .entity("Unprocessable ID: ID cannot be negative")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        Movie movie = movieData.getMovieByMovieId(id);
+        if(movie == null){
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("Movie not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
         return movieData.getMovieByMovieId(id);
     }
 
@@ -41,6 +58,15 @@ public class MovieBusiness {
                             .type(MediaType.APPLICATION_JSON)
                             .build()
             );
+        boolean isDeleted = movieData.deleteMovieByMovieId(id);
+        if (!isDeleted) {
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("Movie not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
         return movieData.deleteMovieByMovieId(id);
     }
 }

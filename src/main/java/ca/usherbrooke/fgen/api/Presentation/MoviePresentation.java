@@ -38,20 +38,13 @@ public class MoviePresentation {
     public Response getMovieByMovieId(@PathParam("id") long id)
     {
         Movie movies = movieBusiness.getMovieByMovieId(id);
-
-        if(movies == null){
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
         return Response.ok(movies).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response deleteMovieByMovieId(@PathParam("id") long id) {
-        boolean isDeleted = movieBusiness.deleteMovieByMovieId(id);
-        if (isDeleted) {
-            return Response.noContent().build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
+        movieBusiness.deleteMovieByMovieId(id);
+        return Response.noContent().build();
     }
 }

@@ -29,6 +29,24 @@ public class UserBusiness {
 
     public User getUserByUserId(long id)
     {
+        if(id < 0){
+            throw new WebApplicationException(
+                    Response.status(422)
+                            .entity("Unprocessable ID: ID cannot be negative")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        User users = userData.getUserByUserId(id);
+
+        if(users == null){
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("User not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
         return userData.getUserByUserId(id);
     }
 
@@ -40,6 +58,15 @@ public class UserBusiness {
                             .type(MediaType.APPLICATION_JSON)
                             .build()
             );
+        boolean isDeleted = userData.deleteUserByUserId(id);
+        if (!isDeleted) {
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("ID not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
         return userData.deleteUserByUserId(id);
     }
 
