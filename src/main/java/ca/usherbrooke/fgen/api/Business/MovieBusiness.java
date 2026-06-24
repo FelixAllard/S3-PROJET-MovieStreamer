@@ -51,7 +51,7 @@ public class MovieBusiness {
                             .build()
             );
         }
-        return movieData.getMovieByMovieId(id);
+        return movie;
     }
 
     public boolean deleteMovieByMovieId(long id) {

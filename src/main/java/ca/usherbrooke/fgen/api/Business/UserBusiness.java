@@ -51,7 +51,7 @@ public class UserBusiness {
                             .build()
             );
         }
-        return userData.getUserByUserId(id);
+        return users;
     }
 
     public boolean deleteUserByUserId(long id) {

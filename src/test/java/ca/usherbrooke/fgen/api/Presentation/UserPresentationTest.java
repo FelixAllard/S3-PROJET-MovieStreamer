@@ -6,6 +6,7 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.SecurityUtils;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -138,11 +139,15 @@ public class UserPresentationTest {
 
     @Test
     void deleteUserByUserId_retourneStatus404SiUserInexistant() {
-        when(userBusiness.deleteUserByUserId(99L)).thenReturn(false);
+        when(userBusiness.deleteUserByUserId(99L))
+                .thenThrow(new WebApplicationException(
+                        Response.status(404).entity("ID not found").build()
+                ));
 
-        Response response = userPresentation.deleteUserByUserId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.deleteUserByUserId(99L));
 
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(404, ex.getResponse().getStatus());
         verify(userBusiness, times(1)).deleteUserByUserId(99L);
     }
 

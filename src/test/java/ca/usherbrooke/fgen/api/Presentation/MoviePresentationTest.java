@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Presentation;
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,13 +78,16 @@ public class MoviePresentationTest {
     @Test
     void getMovieByMovieId_retourneStatus404_siMovieInexistant() {
         // Arrange
-        when(movieBusiness.getMovieByMovieId(99L)).thenReturn(null);
+        when(movieBusiness.getMovieByMovieId(99L))
+                .thenThrow(new WebApplicationException(
+                        Response.status(404).entity("Movie not found").build()
+                ));
 
-        // Act
-        Response response = moviePresentation.getMovieByMovieId(99L);
+        // Act + Assert
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.getMovieByMovieId(99L));
 
-        // Assert
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(404, ex.getResponse().getStatus());
         verify(movieBusiness, times(1)).getMovieByMovieId(99L);
     }
 
@@ -99,11 +103,15 @@ public class MoviePresentationTest {
 
     @Test
     void deleteMovieByMovieId_retourneStatus404SiMovieInexistant() {
-        when(movieBusiness.deleteMovieByMovieId(99L)).thenReturn(false);
+        when(movieBusiness.deleteMovieByMovieId(99L))
+                .thenThrow(new WebApplicationException(
+                        Response.status(404).entity("Movie not found").build()
+                ));
 
-        Response response = moviePresentation.deleteMovieByMovieId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.deleteMovieByMovieId(99L));
 
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(404, ex.getResponse().getStatus());
         verify(movieBusiness, times(1)).deleteMovieByMovieId(99L);
     }
 

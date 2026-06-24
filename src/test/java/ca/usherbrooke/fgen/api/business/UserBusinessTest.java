@@ -65,9 +65,10 @@ public class UserBusinessTest {
     void getUserByUserId_retourneNull_siUtilisateurInexistant() {
         when(userData.getUserByUserId(99L)).thenReturn(null);
 
-        User result = userBusiness.getUserByUserId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.getUserByUserId(99L));
 
-        assertNull(result);
+        assertEquals(404, ex.getResponse().getStatus());
         verify(userData, times(1)).getUserByUserId(99L);
     }
 
@@ -85,9 +86,10 @@ public class UserBusinessTest {
     void deleteUserByUserId_retourneFalseSiUserInexistant() {
         when(userData.deleteUserByUserId(99L)).thenReturn(false);
 
-        boolean result = userBusiness.deleteUserByUserId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.deleteUserByUserId(99L));
 
-        assertFalse(result);
+        assertEquals(404, ex.getResponse().getStatus());
         verify(userData, times(1)).deleteUserByUserId(99L);
     }
 

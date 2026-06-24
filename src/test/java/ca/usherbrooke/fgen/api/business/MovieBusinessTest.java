@@ -100,14 +100,12 @@ public class MovieBusinessTest {
 
     @Test
     void getMovieByMovieId_retourneNull_siMovieInexistant() {
-        // Arrange
         when(movieData.getMovieByMovieId(99L)).thenReturn(null);
 
-        // Act
-        Movie result = movieBusiness.getMovieByMovieId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.getMovieByMovieId(99L));
 
-        // Assert
-        assertNull(result);
+        assertEquals(404, ex.getResponse().getStatus());
         verify(movieData, times(1)).getMovieByMovieId(99L);
     }
 
@@ -125,9 +123,10 @@ public class MovieBusinessTest {
     void deleteMovieByMovieId_retourneFalseSiMovieInexistant() {
         when(movieData.deleteMovieByMovieId(99L)).thenReturn(false);
 
-        boolean result = movieBusiness.deleteMovieByMovieId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.deleteMovieByMovieId(99L));
 
-        assertFalse(result);
+        assertEquals(404, ex.getResponse().getStatus());
         verify(movieData, times(1)).deleteMovieByMovieId(99L);
     }
 
