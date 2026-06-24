@@ -12,10 +12,12 @@ import java.util.List;
 @ApplicationScoped
 public class UserBusiness {
     private final UserData userData;
+    private final UserService userService;
 
     @Inject
-    public UserBusiness(UserData userData) {
+    public UserBusiness(UserData userData, UserService userService) {
         this.userData = userData;
+        this.userService = userService;
     }
 
     public String ping() {
@@ -37,5 +39,12 @@ public class UserBusiness {
         if (newRating > 10 || newRating < 0)
             ExceptionUtils.throwException(400, "Rating does not respect 0 to 10 range");
         return userData.updateUserRatingByUserId(userId, movieId, newRating);
+    }
+
+    public User registerNewUser(String username, String email, String password) {
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            ExceptionUtils.throwException(400, "Username or password cannot be blank.");
+        }
+        return userService.registerNewUser(username, email, password);
     }
 }

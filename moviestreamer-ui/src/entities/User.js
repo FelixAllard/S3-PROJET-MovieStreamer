@@ -2,10 +2,9 @@
 import { WatchMovieUser } from './WatchMovieUser'
 
 export class User {
-    constructor({ id, name, surname, email, keycloakId, watchedMovieUsers = [] } = {}) {
+    constructor({ id, username, email, keycloakId, watchedMovieUsers = [] } = {}) {
         this.id = id
-        this.name = name
-        this.surname = surname
+        this.username = username
         this.email = email
         this.keycloakId = keycloakId
         this.watchedMovieUsers = watchedMovieUsers.map(w => new WatchMovieUser(w))

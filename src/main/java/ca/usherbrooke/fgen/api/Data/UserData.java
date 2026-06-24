@@ -2,7 +2,6 @@ package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.MovieRepository;
 import ca.usherbrooke.fgen.api.DAO.UserRepository;
-import ca.usherbrooke.fgen.api.DAO.WatchMovieUserRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.MovieStatus;
 import ca.usherbrooke.fgen.api.Entities.User;

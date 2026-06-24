@@ -1,6 +1,6 @@
 package ca.usherbrooke.fgen.api.Entities;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,13 +16,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
-    public String name;
-    public String surname;
+    public String username;
     public String email;
 
     @Column(name = "keycloak_id", unique = true)
     public String keycloakId;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<WatchMovieUser> watchedMovieUsers = new ArrayList<>();
 }

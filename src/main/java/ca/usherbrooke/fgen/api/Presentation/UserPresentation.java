@@ -9,10 +9,7 @@ import ca.usherbrooke.fgen.api.Utils.SecurityUtils;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -62,6 +59,17 @@ public class UserPresentation {
         return Response.ok(user).build();
     }
 
+    @GET
+    @Path("me")
+    @RolesAllowed({"user", "admin"})
+    public Response getCurrentUser() {
+        User user = userService.resolveCurrentUser();
+        if (user == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(user).build();
+    }
+
     @PUT
     @Path("{movieId}/{userId}/{newRating}")
     @RolesAllowed({"user", "admin"})
@@ -73,5 +81,20 @@ public class UserPresentation {
         ca.usherbrooke.fgen.api.Entities.WatchMovieUser updated =
                 userBusiness.updateUserRatingByUserId(id, movieId, newRating);
         return Response.ok(updated).build();
+    }
+
+    @POST
+    @Path("register")
+    @PermitAll
+    public Response registerUser(User registrationPayload) {
+
+        System.out.println(registrationPayload.toString());
+
+        User created = userBusiness.registerNewUser(
+                registrationPayload.getUsername(),
+                registrationPayload.getEmail(),
+                registrationPayload.getKeycloakId()
+        );
+        return Response.status(Response.Status.CREATED).entity(created).build();
     }
 }

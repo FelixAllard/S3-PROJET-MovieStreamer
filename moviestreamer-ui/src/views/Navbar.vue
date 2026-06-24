@@ -1,13 +1,75 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { useRouter, RouterLink } from 'vue-router'
 import { motion } from 'motion-v'
 
+const router = useRouter()
 const hoveredItem = ref(null)
+const currentUsername = ref(null)
+const isAdmin = ref(false)
 
-const navItems = [
-  { label: 'Home', to: '/' },
-  { label: 'Movies', to: '/movies' }
-]
+const navItems = computed(() => {
+  const baseItems = [
+    { label: 'Home', to: '/' },
+    { label: 'Movies', to: '/movies' }
+  ]
+
+  if (isAdmin.value) {
+    baseItems.push({ label: '🛡️ Admin Users', to: '/admin/users' })
+  }
+
+  if (currentUsername.value) {
+    return [...baseItems, { label: currentUsername.value, to: '#', isUser: true }]
+  } else {
+    return [...baseItems, { label: 'Login', to: '/login' }]
+  }
+})
+
+function navigateToMyProfile() {
+  router.push('/user/me')
+}
+
+function parseTokenData() {
+  const token = localStorage.getItem('token')
+  
+  if (!token) {
+    currentUsername.value = null
+    isAdmin.value = false
+    return
+  }
+
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    const payload = JSON.parse(jsonPayload)
+    
+    currentUsername.value = payload.preferred_username || payload.name || 'User'
+    isAdmin.value = payload.realm_access?.roles?.includes('admin') || false
+  } catch (error) {
+    console.error('Invalid token payload structure:', error)
+    currentUsername.value = null
+    isAdmin.value = false
+  }
+}
+
+onMounted(() => {
+  parseTokenData()
+  window.addEventListener('auth-change', parseTokenData)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('auth-change', parseTokenData)
+})
+
+function handleLogout() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('db_user_id')
+
+  window.dispatchEvent(new Event('auth-change'))
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -55,30 +117,42 @@ const navItems = [
               @mouseenter="hoveredItem = item.to"
               @mouseleave="hoveredItem = null"
           >
-            <RouterLink
-                :to="item.to"
-                class="nav-link movie-link px-3 py-2"
-            >
-              <span class="link-label">{{ item.label }}</span>
+          <template v-if="item.isUser">
+            <div class="d-flex align-items-center user-display-pill px-3 py-2">
+              <a href="#" @click.prevent="navigateToMyProfile" class="nav-link user-profile-link">
+                👤 {{ item.label }}
+              </a>
+              <span class="pill-separator mx-2">|</span>
+              <button @click="handleLogout" class="btn logout-text-btn">Logout</button>
+            </div>
+          </template>
 
-              <motion.span
-                  class="hover-glow"
-                  :initial="{ opacity: 0, scaleX: 0.4 }"
-                  :animate="hoveredItem === item.to
-                  ? { opacity: 1, scaleX: 1 }
-                  : { opacity: 0, scaleX: 0.4 }"
-                  :transition="{ duration: 0.25, ease: 'easeOut' }"
-              />
+            <template v-else>
+              <RouterLink
+                  :to="item.to"
+                  class="nav-link movie-link px-3 py-2"
+              >
+                <span class="link-label">{{ item.label }}</span>
 
-              <motion.span
-                  class="hover-line"
-                  :initial="{ width: '0%' }"
-                  :animate="hoveredItem === item.to
-                  ? { width: '100%' }
-                  : { width: '0%' }"
-                  :transition="{ duration: 0.3, ease: 'easeOut' }"
-              />
-            </RouterLink>
+                <motion.span
+                    class="hover-glow"
+                    :initial="{ opacity: 0, scaleX: 0.4 }"
+                    :animate="hoveredItem === item.to
+                    ? { opacity: 1, scaleX: 1 }
+                    : { opacity: 0, scaleX: 0.4 }"
+                    :transition="{ duration: 0.25, ease: 'easeOut' }"
+                />
+
+                <motion.span
+                    class="hover-line"
+                    :initial="{ width: '0%' }"
+                    :animate="hoveredItem === item.to
+                    ? { width: '100%' }
+                    : { width: '0%' }"
+                    :transition="{ duration: 0.3, ease: 'easeOut' }"
+                />
+              </RouterLink>
+            </template>
           </li>
         </ul>
       </div>
@@ -91,13 +165,10 @@ const navItems = [
   position: sticky;
   top: 0;
   z-index: 1050;
-  background:
-      linear-gradient(90deg, rgba(7, 4, 15, 0.96), rgba(24, 12, 44, 0.92), rgba(10, 6, 22, 0.96));
+  background: linear-gradient(90deg, rgba(7, 4, 15, 0.96), rgba(24, 12, 44, 0.92), rgba(10, 6, 22, 0.96));
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(139, 92, 246, 0.18);
-  box-shadow:
-      0 8px 30px rgba(0, 0, 0, 0.35),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.03);
   overflow: hidden;
 }
 
@@ -105,19 +176,14 @@ const navItems = [
   content: '';
   position: absolute;
   inset: 0;
-  background:
-      linear-gradient(120deg, transparent 0%, rgba(139, 92, 246, 0.08) 35%, transparent 70%);
+  background: linear-gradient(120deg, transparent 0%, rgba(139, 92, 246, 0.08) 35%, transparent 70%);
   pointer-events: none;
   animation: navbarSheen 6s linear infinite;
 }
 
 @keyframes navbarSheen {
-  0% {
-    transform: translateX(-35%);
-  }
-  100% {
-    transform: translateX(35%);
-  }
+  0% { transform: translateX(-35%); }
+  100% { transform: translateX(35%); }
 }
 
 .brand-wrap {
@@ -143,12 +209,8 @@ const navItems = [
 }
 
 @keyframes brandFlow {
-  0% {
-    background-position: 0% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .movie-link {
@@ -156,10 +218,7 @@ const navItems = [
   color: rgba(255, 255, 255, 0.84) !important;
   font-weight: 600;
   border-radius: 12px;
-  transition:
-      color 0.25s ease,
-      background-color 0.25s ease,
-      transform 0.2s ease;
+  transition: color 0.25s ease, background-color 0.25s ease, transform 0.2s ease;
   overflow: hidden;
 }
 
@@ -204,13 +263,53 @@ const navItems = [
 .router-link-active.movie-link {
   color: #ffffff !important;
   background: rgba(139, 92, 246, 0.12);
-  box-shadow:
-      inset 0 0 0 1px rgba(192, 132, 252, 0.22),
-      0 0 18px rgba(139, 92, 246, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.22), 0 0 18px rgba(139, 92, 246, 0.12);
 }
 
 .router-link-active.movie-link .hover-line {
   width: 100% !important;
+}
+
+.user-display-pill {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(196, 181, 253, 0.18);
+  border-radius: 14px;
+}
+
+.pill-separator {
+  color: rgba(255, 255, 255, 0.25);
+  font-weight: 300;
+}
+
+.user-profile-link {
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.2s ease, text-shadow 0.2s ease;
+}
+
+.user-profile-link:hover {
+  color: #ffffff !important;
+  opacity: 0.85;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.logout-text-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fca5a5;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.logout-text-btn:hover {
+  color: #ef4444;
+  transform: translateY(-0.5px);
 }
 
 @media (max-width: 991.98px) {
@@ -219,8 +318,9 @@ const navItems = [
     padding-bottom: 0.5rem;
   }
 
-  .movie-link {
+  .movie-link, .user-display-pill {
     text-align: center;
+    justify-content: center;
   }
 
   .navbar-collapse {

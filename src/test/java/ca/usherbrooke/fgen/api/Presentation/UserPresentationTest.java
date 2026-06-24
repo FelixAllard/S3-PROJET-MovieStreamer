@@ -125,4 +125,38 @@ public class UserPresentationTest {
         assertEquals(200, response.getStatus());
         verify(userBusiness, times(1)).updateUserRatingByUserId(1L, 2L, 3);
     }
+
+
+    @Test
+    void getCurrentUser_me_succes_retourneStatus200AvecUtilisateurConnecte() {
+        // Arrange
+        User currentUser = new User();
+        currentUser.setId(10L);
+        currentUser.setUsername("activeUser");
+        currentUser.setEmail("active@example.com");
+
+        when(userService.resolveCurrentUser()).thenReturn(currentUser);
+
+        // Act
+        Response response = userPresentation.getCurrentUser();
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(currentUser, response.getEntity());
+        verify(userService, times(1)).resolveCurrentUser();
+    }
+
+    @Test
+    void getCurrentUser_me_retourneStatus404_siContextUtilisateurIntrouvable() {
+        // Arrange
+        when(userService.resolveCurrentUser()).thenReturn(null);
+
+        // Act
+        Response response = userPresentation.getCurrentUser();
+
+        // Assert
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertNull(response.getEntity());
+        verify(userService, times(1)).resolveCurrentUser();
+    }
 }
