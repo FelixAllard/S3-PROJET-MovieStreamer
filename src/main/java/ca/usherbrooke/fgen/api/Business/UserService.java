@@ -63,18 +63,19 @@ public class UserService {
 
         String realmName = "usager";
         UsersResource usersResource = keycloak.realm(realmName).users();
-        Response response = usersResource.create(keycloakUser);
 
-        if (response.getStatus() != 201) {
-            ExceptionUtils.throwException(response.getStatus(), "Failed to provision target user in Keycloak identity system.");
+        String keycloakId;
+        try (Response response = usersResource.create(keycloakUser)) {
+            if (response.getStatus() != 201) {
+                ExceptionUtils.throwException(response.getStatus(), "Failed to provision target user in Keycloak identity system.");
+            }
+
+            String path = response.getLocation().getPath();
+            keycloakId = path.substring(path.lastIndexOf("/") + 1);
         }
-
-        String path = response.getLocation().getPath();
-        String keycloakId = path.substring(path.lastIndexOf("/") + 1);
 
         try {
             RoleRepresentation userRole = keycloak.realm(realmName).roles().get("user").toRepresentation();
-
             usersResource.get(keycloakId).roles().realmLevel().add(Collections.singletonList(userRole));
         } catch (Exception e) {
             System.err.println("Failed to assign default 'user' role to Keycloak identity profile: " + e.getMessage());
@@ -88,7 +89,6 @@ public class UserService {
 
         return localUser;
     }
-
     @Transactional
     public void disableUser(long userId) {
         // 1. Find the user locally to get their Keycloak UUID string

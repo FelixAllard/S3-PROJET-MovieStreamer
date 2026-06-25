@@ -78,15 +78,15 @@ public class MovieData {
         if (movie == null)
             ExceptionUtils.throwException(404, "Movie Not Found");
 
-        movie.setTitle(updatedMovie.title);
-        movie.setDescription(updatedMovie.description);
+        movie.setTitle(updatedMovie.title == null ? "" : updatedMovie.title);
+        movie.setDescription(updatedMovie.description == null ? "" : updatedMovie.description);
         movie.setYear(updatedMovie.year);
         movie.setMovieLength(updatedMovie.movieLength);
-        movie.setThumbnail(updatedMovie.thumbnail);
-        movie.setDirector(updatedMovie.director);
-        movie.setWriter(updatedMovie.writer);
-        movie.setStudio(updatedMovie.studio);
-        movie.setLanguage(updatedMovie.language);
+        movie.setThumbnail(updatedMovie.thumbnail == null ? "" : updatedMovie.thumbnail);
+        movie.setDirector(updatedMovie.director == null ? "" : updatedMovie.director);
+        movie.setWriter(updatedMovie.writer == null ? "" : updatedMovie.writer);
+        movie.setStudio(updatedMovie.studio == null ? "" : updatedMovie.studio);
+        movie.setLanguage(updatedMovie.language == null ? "" : updatedMovie.language);
 
         return movie;
     }
