@@ -36,6 +36,8 @@ public class UserDataTest {
         userRepository = Mockito.mock(UserRepository.class);
         movieRepository = Mockito.mock(MovieRepository.class);
         userData = new UserData(userRepository, movieRepository);
+        keycloak = Mockito.mock(Keycloak.class, Mockito.withSettings().defaultAnswer(Mockito.RETURNS_DEEP_STUBS));
+        jwt = Mockito.mock(JsonWebToken.class);
         userService= new UserService(jwt,userRepository,keycloak);
 
     }

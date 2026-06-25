@@ -29,26 +29,26 @@ public class UserBusinessTest {
     }
 
     @Test
-    void getAllUsers_delegueAUserDataEtRetourneListe() {
+    void getAllUsers_delegueAUserServiceEtRetourneListe() {
         User u1 = new User();
         User u2 = new User();
-        when(userData.getAllUsers()).thenReturn(List.of(u1, u2));
+        when(userService.getAllUsersWithStatus()).thenReturn(List.of(u1, u2));
 
         List<User> result = userBusiness.getAllUsers();
 
         assertEquals(2, result.size());
-        verify(userData, times(1)).getAllUsers();
+        verify(userService, times(1)).getAllUsersWithStatus();
     }
 
     @Test
     void getAllUsers_retourneListeVideSiAucunUtilisateur() {
-        when(userData.getAllUsers()).thenReturn(List.of());
+        when(userService.getAllUsersWithStatus()).thenReturn(List.of());
 
         List<User> result = userBusiness.getAllUsers();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(userData, times(1)).getAllUsers();
+        verify(userService, times(1)).getAllUsersWithStatus();
     }
     @Test
     void getUserByUserId_delegueAUserDataEtRetourneUtilisateur() {
