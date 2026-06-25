@@ -73,24 +73,30 @@ public class UserBusinessTest {
     }
 
     @Test
-    void deleteUserByUserId_delegueAUserDataEtRetourneTrue() {
-        when(userData.deleteUserByUserId(1L)).thenReturn(true);
+    void disableUser_appelleServiceAvecIdValide() {
+        doNothing().when(userService).disableUser(1L);
 
-        boolean result = userBusiness.deleteUserByUserId(1L);
+        userBusiness.disableUser(1L);
 
-        assertTrue(result);
-        verify(userData, times(1)).deleteUserByUserId(1L);
+        verify(userService, times(1)).disableUser(1L);
     }
 
     @Test
-    void deleteUserByUserId_retourneFalseSiUserInexistant() {
-        when(userData.deleteUserByUserId(99L)).thenReturn(false);
-
+    void disableUser_lanceExceptionSiIdInvalide() {
         WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userBusiness.deleteUserByUserId(99L));
+                () -> userBusiness.disableUser(0L));
 
-        assertEquals(404, ex.getResponse().getStatus());
-        verify(userData, times(1)).deleteUserByUserId(99L);
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userService, never()).disableUser(anyLong());
+    }
+
+    @Test
+    void disableUser_lanceExceptionSiIdNegatif() {
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.disableUser(-5L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userService, never()).disableUser(anyLong());
     }
 
     @Test

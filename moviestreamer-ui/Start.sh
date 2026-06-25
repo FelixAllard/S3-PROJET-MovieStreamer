@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Stop if any command fails

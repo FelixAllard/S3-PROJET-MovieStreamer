@@ -15,6 +15,7 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import java.util.Collections;
+import java.util.List;
 
 @ApplicationScoped
 public class UserService {
@@ -86,5 +87,59 @@ public class UserService {
         userRepository.persist(localUser);
 
         return localUser;
+    }
+
+    @Transactional
+    public void disableUser(long userId) {
+        // 1. Find the user locally to get their Keycloak UUID string
+        User user = userRepository.findById(userId);
+        if (user == null) {
+            ExceptionUtils.throwException(404, "User not found in database.");
+        }
+
+        try {
+            String realmName = "usager";
+            // 2. Fetch the current Keycloak representation
+            UserRepresentation keycloakUser = keycloak.realm(realmName)
+                    .users()
+                    .get(user.getKeycloakId())
+                    .toRepresentation();
+
+            // 3. Flip the flag to false
+            keycloakUser.setEnabled(false);
+
+            // 4. Push the update back to Keycloak
+            keycloak.realm(realmName)
+                    .users()
+                    .get(user.getKeycloakId())
+                    .update(keycloakUser);
+
+        } catch (Exception e) {
+            ExceptionUtils.throwException(500, "Failed to disable user in Keycloak: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public List<User> getAllUsersWithStatus() {
+        List<User> users = userRepository.listAll();
+        String realmName = "usager";
+
+        for (User u : users) {
+            if (u.getKeycloakId() != null) {
+                try {
+                    boolean isKeycloakEnabled = keycloak.realm(realmName)
+                            .users()
+                            .get(u.getKeycloakId())
+                            .toRepresentation()
+                            .isEnabled();
+
+                    u.setEnabled(isKeycloakEnabled);
+                } catch (Exception e) {
+                    u.setEnabled(true);
+                    System.err.println("Could not resolve status for user ID " + u.getId() + ": " + e.getMessage());
+                }
+            }
+        }
+        return users;
     }
 }

@@ -27,8 +27,8 @@ public class UserBusiness {
         return userData.ping();
     }
 
-    public List<User> getAllUsers(){
-        return userData.getAllUsers();
+    public List<User> getAllUsers() {
+        return userService.getAllUsersWithStatus();
     }
 
     public User getUserByUserId(long id)
@@ -54,24 +54,11 @@ public class UserBusiness {
         return users;
     }
 
-    public boolean deleteUserByUserId(long id) {
-        if (id < 0)
-            throw new WebApplicationException(
-                    Response.status(422)
-                            .entity("Unprocessable ID: ID cannot be negative")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
-        boolean isDeleted = userData.deleteUserByUserId(id);
-        if (!isDeleted) {
-            throw new WebApplicationException(
-                    Response.status(404)
-                            .entity("ID not found")
-                            .type(MediaType.APPLICATION_JSON)
-                            .build()
-            );
+    public void disableUser(long id) {
+        if (id <= 0) {
+            ExceptionUtils.throwException(400, "Invalid user ID provided.");
         }
-        return isDeleted;
+        userService.disableUser(id);
     }
 
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating) {
@@ -88,4 +75,6 @@ public class UserBusiness {
         }
         return userService.registerNewUser(username, email, password);
     }
+
+
 }

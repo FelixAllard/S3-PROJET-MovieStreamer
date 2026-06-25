@@ -101,10 +101,11 @@ public class UserPresentation {
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
-    @DELETE
-    @Path("{id}")
-    public Response deleteUserByUserId(@PathParam("id") long id) {
-        userBusiness.deleteUserByUserId(id);
-        return Response.noContent().build();
+    @PUT
+    @Path("{id}/disable")
+    @RolesAllowed({"admin"})
+    public Response disableUser(@PathParam("id") long id) {
+        userBusiness.disableUser(id);
+        return Response.ok().build();
     }
 }

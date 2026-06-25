@@ -128,27 +128,52 @@ public class UserPresentationTest {
     }
 
     @Test
-    void deleteUserByUserId_retourneStatus204SiUserSupprime() {
-        when(userBusiness.deleteUserByUserId(1L)).thenReturn(true);
+    void disableUser_retourneStatus200SiSucces() {
+        doNothing().when(userBusiness).disableUser(1L);
 
-        Response response = userPresentation.deleteUserByUserId(1L);
+        Response response = userPresentation.disableUser(1L);
 
-        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
-        verify(userBusiness, times(1)).deleteUserByUserId(1L);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        verify(userBusiness, times(1)).disableUser(1L);
     }
 
     @Test
-    void deleteUserByUserId_retourneStatus404SiUserInexistant() {
-        when(userBusiness.deleteUserByUserId(99L))
-                .thenThrow(new WebApplicationException(
-                        Response.status(404).entity("ID not found").build()
-                ));
+    void disableUser_retourneStatus400SiIdInvalide() {
+        doThrow(new WebApplicationException(
+                Response.status(400).entity("Invalid user ID provided.").build()
+        )).when(userBusiness).disableUser(0L);
 
         WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userPresentation.deleteUserByUserId(99L));
+                () -> userPresentation.disableUser(0L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).disableUser(0L);
+    }
+
+    @Test
+    void disableUser_retourneStatus404SiUserInexistant() {
+        doThrow(new WebApplicationException(
+                Response.status(404).entity("User not found in database.").build()
+        )).when(userBusiness).disableUser(99L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.disableUser(99L));
 
         assertEquals(404, ex.getResponse().getStatus());
-        verify(userBusiness, times(1)).deleteUserByUserId(99L);
+        verify(userBusiness, times(1)).disableUser(99L);
+    }
+
+    @Test
+    void disableUser_retourneStatus500SiKeycloakEchoue() {
+        doThrow(new WebApplicationException(
+                Response.status(500).entity("Failed to disable user in Keycloak.").build()
+        )).when(userBusiness).disableUser(1L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.disableUser(1L));
+
+        assertEquals(500, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).disableUser(1L);
     }
 
     @Test
