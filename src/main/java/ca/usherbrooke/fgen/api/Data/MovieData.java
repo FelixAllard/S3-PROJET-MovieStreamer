@@ -71,4 +71,23 @@ public class MovieData {
     public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
         return movieRepository.findByTagIds(tagIds);
     }
+
+    @Transactional
+    public Movie updateMovieByMovieId(int id, Movie updatedMovie) {
+        Movie movie = movieRepository.findById((long) id);
+        if (movie == null)
+            ExceptionUtils.throwException(404, "Movie Not Found");
+
+        movie.setTitle(updatedMovie.title);
+        movie.setDescription(updatedMovie.description);
+        movie.setYear(updatedMovie.year);
+        movie.setMovieLength(updatedMovie.movieLength);
+        movie.setThumbnail(updatedMovie.thumbnail);
+        movie.setDirector(updatedMovie.director);
+        movie.setWriter(updatedMovie.writer);
+        movie.setStudio(updatedMovie.studio);
+        movie.setLanguage(updatedMovie.language);
+
+        return movie;
+    }
 }

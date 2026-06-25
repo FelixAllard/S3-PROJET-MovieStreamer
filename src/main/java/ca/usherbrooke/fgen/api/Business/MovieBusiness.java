@@ -161,4 +161,31 @@ public class MovieBusiness {
 
         return movies;
     }
+
+    public Movie updateMovieByMovieId(int id, Movie updatedMovie) {
+        if (id < 0)
+            ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");
+        if (updatedMovie == null)
+            ExceptionUtils.throwException(400, "Movie Null");
+        if (updatedMovie.description == null || updatedMovie.description.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Description Empty");
+        if (updatedMovie.title == null || updatedMovie.title.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Title Empty");
+        if (updatedMovie.year < 0)
+            ExceptionUtils.throwException(422, "Movie Year Invalid");
+        if (updatedMovie.director == null || updatedMovie.director.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Director Empty");
+        if (updatedMovie.studio == null || updatedMovie.studio.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Studio Empty");
+        if (updatedMovie.writer == null || updatedMovie.writer.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Writer Empty");
+        if (updatedMovie.movieLength < 0)
+            ExceptionUtils.throwException(422, "Movie Length Invalid");
+        if (updatedMovie.language == null || updatedMovie.language.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Language Empty");
+        if (updatedMovie.thumbnail == null || updatedMovie.thumbnail.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
+
+        return movieData.updateMovieByMovieId(id, updatedMovie);
+    }
 }

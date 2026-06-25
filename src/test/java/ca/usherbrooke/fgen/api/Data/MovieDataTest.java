@@ -219,4 +219,27 @@ public class MovieDataTest {
         assertEquals(movies, result);
         verify(movieRepository, times(1)).findByTagIds(tagIds);
     }
+
+    @Test
+    void updateMovieByMovieId_metAJourEtRetourneLeFilm() {
+        Movie existingMovie = new Movie();
+        existingMovie.title = "Old Title";
+        Movie updatedInfo = new Movie();
+        updatedInfo.title = "New Title";
+
+        when(movieRepository.findById(1L)).thenReturn(existingMovie);
+
+        Movie result = movieData.updateMovieByMovieId(1, updatedInfo);
+
+        assertEquals("New Title", result.title);
+        verify(movieRepository).findById(1L);
+    }
+
+    @Test
+    void updateMovieByMovieId_lance404SiFilmInexistant() {
+        when(movieRepository.findById(99L)).thenReturn(null);
+
+        assertThrows(WebApplicationException.class,
+                () -> movieData.updateMovieByMovieId(99, new Movie()));
+    }
 }

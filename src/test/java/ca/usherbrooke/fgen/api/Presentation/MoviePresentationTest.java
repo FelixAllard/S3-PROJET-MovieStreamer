@@ -200,5 +200,28 @@ public class MoviePresentationTest {
         assertEquals(204, ex.getResponse().getStatus());
     }
 
+    @Test
+    void updateMovieByMovieId_retourne200AvecMovieMisAJour() {
+        Movie input = new Movie();
+        input.title = "New Title";
+        when(movieBusiness.updateMovieByMovieId(1, input)).thenReturn(input);
+
+        Response response = moviePresentation.updateMovieByMovieId(1, input);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(input, response.getEntity());
+        verify(movieBusiness).updateMovieByMovieId(1, input);
+    }
+
+    @Test
+    void updateMovieByMovieId_retourneExceptionSiErreurBusiness() {
+        Movie input = new Movie();
+        when(movieBusiness.updateMovieByMovieId(anyInt(), any(Movie.class)))
+                .thenThrow(new WebApplicationException(422));
+
+        assertThrows(WebApplicationException.class,
+                () -> moviePresentation.updateMovieByMovieId(1, input));
+    }
+
 
 }

@@ -97,4 +97,12 @@ public class MoviePresentation {
         List<Movie> movies = movieBusiness.getMoviesByMovieTags(tagIds);
         return Response.ok(movies).build();
     }
+
+    @PUT
+    @Path("{id}")
+    @RolesAllowed({"admin"})
+    public Response updateMovieByMovieId(@PathParam("id") int id, Movie movie) {
+        Movie updated = movieBusiness.updateMovieByMovieId(id, movie);
+        return Response.ok(updated).build();
+    }
 }

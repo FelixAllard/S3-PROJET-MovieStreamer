@@ -310,5 +310,30 @@ public class MovieBusinessTest {
         assertEquals(204, ex.getResponse().getStatus());
     }
 
+    @Test
+    void updateMovieByMovieId_delegueAMovieDataEtRetourneMovie() {
+        Movie input = createValidMovie();
+        when(movieData.updateMovieByMovieId(1, input)).thenReturn(input);
+
+        Movie result = movieBusiness.updateMovieByMovieId(1, input);
+
+        assertEquals(input, result);
+        verify(movieData, times(1)).updateMovieByMovieId(1, input);
+    }
+
+    @Test
+    void updateMovieByMovieId_valideLesChampsEtLanceException() {
+        assertThrows(WebApplicationException.class, () -> movieBusiness.updateMovieByMovieId(-1, new Movie()));
+
+        assertThrows(WebApplicationException.class, () -> movieBusiness.updateMovieByMovieId(1, null));
+
+        Movie invalidMovie = createValidMovie();
+        invalidMovie.title = "";
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.updateMovieByMovieId(1, invalidMovie));
+        assertEquals(422, ex.getResponse().getStatus());
+    }
+
 
 }
