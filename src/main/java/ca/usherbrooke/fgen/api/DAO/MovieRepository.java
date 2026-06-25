@@ -1,6 +1,7 @@
 package ca.usherbrooke.fgen.api.DAO;
 
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -20,6 +21,13 @@ public class MovieRepository implements PanacheRepository<Movie> {
                         "SELECT m FROM Movie m ORDER BY m.year DESC",
                         Movie.class)
                 .setMaxResults(limit)
+                .getResultList();
+    }
+
+    public List<Movie> findByTagIds(List<Integer> tagIds) {
+        return getEntityManager()
+                .createQuery("SELECT DISTINCT m FROM Movie m JOIN m.tags t WHERE t.id IN :tagIds", Movie.class)
+                .setParameter("tagIds", tagIds)
                 .getResultList();
     }
 }

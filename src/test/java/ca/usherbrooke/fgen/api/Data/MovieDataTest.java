@@ -207,4 +207,16 @@ public class MovieDataTest {
         );
 
     }
+
+    @Test
+    void getMoviesByMovieTags_delegueAuRepository() {
+        List<Integer> tagIds = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie());
+        when(movieRepository.findByTagIds(tagIds)).thenReturn(movies);
+
+        List<Movie> result = movieData.getMoviesByMovieTags(tagIds);
+
+        assertEquals(movies, result);
+        verify(movieRepository, times(1)).findByTagIds(tagIds);
+    }
 }

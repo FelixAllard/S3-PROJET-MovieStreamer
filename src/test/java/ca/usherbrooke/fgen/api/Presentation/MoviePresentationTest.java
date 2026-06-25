@@ -175,7 +175,30 @@ public class MoviePresentationTest {
         assertEquals(movie, response.getEntity());
     }
 
+    @Test
+    void getMoviesByMovieTags_retourneStatus200AvecListe() {
+        List<Integer> tagIds = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie());
+        when(movieBusiness.getMoviesByMovieTags(tagIds)).thenReturn(movies);
 
+        Response response = moviePresentation.getMoviesByMovieTags(tagIds);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(movies, response.getEntity());
+        verify(movieBusiness, times(1)).getMoviesByMovieTags(tagIds);
+    }
+
+    @Test
+    void getMoviesByMovieTags_propagationExceptionBusiness() {
+        List<Integer> tagIds = List.of(99);
+        when(movieBusiness.getMoviesByMovieTags(tagIds))
+                .thenThrow(new WebApplicationException(Response.status(204).build()));
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.getMoviesByMovieTags(tagIds));
+
+        assertEquals(204, ex.getResponse().getStatus());
+    }
 
 
 }

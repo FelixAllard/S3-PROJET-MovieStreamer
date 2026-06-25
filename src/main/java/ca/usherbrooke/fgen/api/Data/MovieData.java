@@ -68,4 +68,7 @@ public class MovieData {
         movieRepository.persist(movie);
         return movie;
     }
+    public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
+        return movieRepository.findByTagIds(tagIds);
+    }
 }

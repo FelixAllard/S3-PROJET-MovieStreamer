@@ -281,7 +281,34 @@ public class MovieBusinessTest {
                 )
         );
     }
+    @Test
+    void getMoviesByMovieTags_delegueAMovieDataEtRetourneListe() {
+        List<Integer> tagIds = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie(), new Movie());
+        when(movieData.getMoviesByMovieTags(tagIds)).thenReturn(movies);
 
+        List<Movie> result = movieBusiness.getMoviesByMovieTags(tagIds);
+
+        assertEquals(2, result.size());
+        verify(movieData, times(1)).getMoviesByMovieTags(tagIds);
+    }
+
+    @Test
+    void getMoviesByMovieTags_tagIdsNullOuVideLanceException() {
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMoviesByMovieTags(null));
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMoviesByMovieTags(List.of()));
+    }
+
+    @Test
+    void getMoviesByMovieTags_retourne204SiAucunFilmTrouve() {
+        List<Integer> tagIds = List.of(1);
+        when(movieData.getMoviesByMovieTags(tagIds)).thenReturn(List.of());
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.getMoviesByMovieTags(tagIds));
+
+        assertEquals(204, ex.getResponse().getStatus());
+    }
 
 
 }

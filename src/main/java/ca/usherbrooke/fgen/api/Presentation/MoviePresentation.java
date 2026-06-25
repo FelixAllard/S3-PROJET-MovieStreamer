@@ -7,11 +7,7 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
@@ -92,5 +88,13 @@ public class MoviePresentation {
         Movie created = movieBusiness.postMovie(movie);
         return Response.status(Response.Status.CREATED).entity(created).build();
 
+    }
+
+    @GET
+    @Path("tags")
+    @PermitAll
+    public Response getMoviesByMovieTags(@QueryParam("tagIds") List<Integer> tagIds) {
+        List<Movie> movies = movieBusiness.getMoviesByMovieTags(tagIds);
+        return Response.ok(movies).build();
     }
 }

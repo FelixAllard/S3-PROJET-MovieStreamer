@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.MovieData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -148,5 +149,16 @@ public class MovieBusiness {
         if(movie.thumbnail == null || movie.thumbnail.isEmpty())
             ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
         return movieData.postMovie(movie);
+    }
+
+    public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
+        if (tagIds == null || tagIds.isEmpty())
+            ExceptionUtils.throwException(422, "Tags list cannot be null or empty");
+
+        List<Movie> movies = movieData.getMoviesByMovieTags(tagIds);
+        if (movies.isEmpty())
+            ExceptionUtils.throwException(204, "No content");
+
+        return movies;
     }
 }
