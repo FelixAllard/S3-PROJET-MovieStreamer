@@ -18,6 +18,8 @@ public class User {
     public Long id;
     public String username;
     public String email;
+    @Transient
+    private boolean enabled = true;
 
     @Column(name = "keycloak_id", unique = true)
     public String keycloakId;
@@ -25,4 +27,6 @@ public class User {
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<WatchMovieUser> watchedMovieUsers = new ArrayList<>();
+
+
 }

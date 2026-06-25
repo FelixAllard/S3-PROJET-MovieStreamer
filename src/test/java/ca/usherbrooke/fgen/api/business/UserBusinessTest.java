@@ -29,26 +29,26 @@ public class UserBusinessTest {
     }
 
     @Test
-    void getAllUsers_delegueAUserDataEtRetourneListe() {
+    void getAllUsers_delegueAUserServiceEtRetourneListe() {
         User u1 = new User();
         User u2 = new User();
-        when(userData.getAllUsers()).thenReturn(List.of(u1, u2));
+        when(userService.getAllUsersWithStatus()).thenReturn(List.of(u1, u2));
 
         List<User> result = userBusiness.getAllUsers();
 
         assertEquals(2, result.size());
-        verify(userData, times(1)).getAllUsers();
+        verify(userService, times(1)).getAllUsersWithStatus();
     }
 
     @Test
     void getAllUsers_retourneListeVideSiAucunUtilisateur() {
-        when(userData.getAllUsers()).thenReturn(List.of());
+        when(userService.getAllUsersWithStatus()).thenReturn(List.of());
 
         List<User> result = userBusiness.getAllUsers();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(userData, times(1)).getAllUsers();
+        verify(userService, times(1)).getAllUsersWithStatus();
     }
     @Test
     void getUserByUserId_delegueAUserDataEtRetourneUtilisateur() {
@@ -65,10 +65,38 @@ public class UserBusinessTest {
     void getUserByUserId_retourneNull_siUtilisateurInexistant() {
         when(userData.getUserByUserId(99L)).thenReturn(null);
 
-        User result = userBusiness.getUserByUserId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.getUserByUserId(99L));
 
-        assertNull(result);
+        assertEquals(404, ex.getResponse().getStatus());
         verify(userData, times(1)).getUserByUserId(99L);
+    }
+
+    @Test
+    void disableUser_appelleServiceAvecIdValide() {
+        doNothing().when(userService).disableUser(1L);
+
+        userBusiness.disableUser(1L);
+
+        verify(userService, times(1)).disableUser(1L);
+    }
+
+    @Test
+    void disableUser_lanceExceptionSiIdInvalide() {
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.disableUser(0L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userService, never()).disableUser(anyLong());
+    }
+
+    @Test
+    void disableUser_lanceExceptionSiIdNegatif() {
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.disableUser(-5L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userService, never()).disableUser(anyLong());
     }
 
     @Test

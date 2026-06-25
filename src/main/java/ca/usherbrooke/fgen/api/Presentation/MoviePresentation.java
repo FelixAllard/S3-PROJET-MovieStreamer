@@ -7,10 +7,7 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
@@ -50,13 +47,16 @@ public class MoviePresentation {
     public Response getMovieByMovieId(@PathParam("id") long id)
     {
         Movie movies = movieBusiness.getMovieByMovieId(id);
-
-        if(movies == null){
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
         return Response.ok(movies).build();
     }
 
+    @DELETE
+    @Path("{id}")
+    public Response deleteMovieByMovieId(@PathParam("id") long id) {
+        movieBusiness.deleteMovieByMovieId(id);
+        return Response.noContent().build();
+    }
+    
     @GET
     @Path("name/{name}")
     @PermitAll
@@ -88,5 +88,21 @@ public class MoviePresentation {
         Movie created = movieBusiness.postMovie(movie);
         return Response.status(Response.Status.CREATED).entity(created).build();
 
+    }
+
+    @GET
+    @Path("tags")
+    @PermitAll
+    public Response getMoviesByMovieTags(@QueryParam("tagIds") List<Integer> tagIds) {
+        List<Movie> movies = movieBusiness.getMoviesByMovieTags(tagIds);
+        return Response.ok(movies).build();
+    }
+
+    @PUT
+    @Path("{id}")
+    @RolesAllowed({"admin"})
+    public Response updateMovieByMovieId(@PathParam("id") int id, Movie movie) {
+        Movie updated = movieBusiness.updateMovieByMovieId(id, movie);
+        return Response.ok(updated).build();
     }
 }

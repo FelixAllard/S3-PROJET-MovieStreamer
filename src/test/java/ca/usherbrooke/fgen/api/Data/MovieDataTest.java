@@ -87,6 +87,25 @@ public class MovieDataTest {
     }
 
     @Test
+    void deleteMovieByMovieId_delegueAuRepositoryEtRetourneTrue() {
+        when(movieRepository.deleteById(1L)).thenReturn(true);
+
+        boolean result = movieData.deleteMovieByMovieId(1L);
+
+        assertTrue(result);
+        verify(movieRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void deleteMovieByMovieId_retourneFalseSiRepositoryNeSupprimeRien() {
+        when(movieRepository.deleteById(99L)).thenReturn(false);
+
+        boolean result = movieData.deleteMovieByMovieId(99L);
+
+        assertFalse(result);
+        verify(movieRepository, times(1)).deleteById(99L);
+    }
+
     void getMovieByMovieName_delegueAuRepositoryEtRetourneMovie() {
         Movie movie = new Movie();
         movie.title = "Interstellar";
@@ -187,5 +206,40 @@ public class MovieDataTest {
                 () -> movieData.postMovie(movie)
         );
 
+    }
+
+    @Test
+    void getMoviesByMovieTags_delegueAuRepository() {
+        List<Integer> tagIds = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie());
+        when(movieRepository.findByTagIds(tagIds)).thenReturn(movies);
+
+        List<Movie> result = movieData.getMoviesByMovieTags(tagIds);
+
+        assertEquals(movies, result);
+        verify(movieRepository, times(1)).findByTagIds(tagIds);
+    }
+
+    @Test
+    void updateMovieByMovieId_metAJourEtRetourneLeFilm() {
+        Movie existingMovie = new Movie();
+        existingMovie.title = "Old Title";
+        Movie updatedInfo = new Movie();
+        updatedInfo.title = "New Title";
+
+        when(movieRepository.findById(1L)).thenReturn(existingMovie);
+
+        Movie result = movieData.updateMovieByMovieId(1, updatedInfo);
+
+        assertEquals("New Title", result.title);
+        verify(movieRepository).findById(1L);
+    }
+
+    @Test
+    void updateMovieByMovieId_lance404SiFilmInexistant() {
+        when(movieRepository.findById(99L)).thenReturn(null);
+
+        assertThrows(WebApplicationException.class,
+                () -> movieData.updateMovieByMovieId(99, new Movie()));
     }
 }

@@ -6,6 +6,9 @@ import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -24,13 +27,38 @@ public class UserBusiness {
         return userData.ping();
     }
 
-    public List<User> getAllUsers(){
-        return userData.getAllUsers();
+    public List<User> getAllUsers() {
+        return userService.getAllUsersWithStatus();
     }
 
     public User getUserByUserId(long id)
     {
-        return userData.getUserByUserId(id);
+        if(id < 0){
+            throw new WebApplicationException(
+                    Response.status(422)
+                            .entity("Unprocessable ID: ID cannot be negative")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        User users = userData.getUserByUserId(id);
+
+        if(users == null){
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("User not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        return users;
+    }
+
+    public void disableUser(long id) {
+        if (id <= 0) {
+            ExceptionUtils.throwException(400, "Invalid user ID provided.");
+        }
+        userService.disableUser(id);
     }
 
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating) {
@@ -47,4 +75,6 @@ public class UserBusiness {
         }
         return userService.registerNewUser(username, email, password);
     }
+
+
 }

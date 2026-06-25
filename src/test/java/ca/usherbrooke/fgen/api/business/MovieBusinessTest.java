@@ -100,18 +100,36 @@ public class MovieBusinessTest {
 
     @Test
     void getMovieByMovieId_retourneNull_siMovieInexistant() {
-        // Arrange
         when(movieData.getMovieByMovieId(99L)).thenReturn(null);
 
-        // Act
-        Movie result = movieBusiness.getMovieByMovieId(99L);
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.getMovieByMovieId(99L));
 
-        // Assert
-        assertNull(result);
+        assertEquals(404, ex.getResponse().getStatus());
         verify(movieData, times(1)).getMovieByMovieId(99L);
     }
 
     @Test
+    void deleteMovieByMovieId_delegueAMovieDataEtRetourneTrue() {
+        when(movieData.deleteMovieByMovieId(1L)).thenReturn(true);
+
+        boolean result = movieBusiness.deleteMovieByMovieId(1L);
+
+        assertTrue(result);
+        verify(movieData, times(1)).deleteMovieByMovieId(1L);
+    }
+
+    @Test
+    void deleteMovieByMovieId_retourneFalseSiMovieInexistant() {
+        when(movieData.deleteMovieByMovieId(99L)).thenReturn(false);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.deleteMovieByMovieId(99L));
+
+        assertEquals(404, ex.getResponse().getStatus());
+        verify(movieData, times(1)).deleteMovieByMovieId(99L);
+    }
+
     void getMovieByMovieName_delegueAMovieDataEtRetourneMovie() {
         Movie movie = new Movie();
         movie.title = "Interstellar";
@@ -263,7 +281,59 @@ public class MovieBusinessTest {
                 )
         );
     }
+    @Test
+    void getMoviesByMovieTags_delegueAMovieDataEtRetourneListe() {
+        List<Integer> tagIds = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie(), new Movie());
+        when(movieData.getMoviesByMovieTags(tagIds)).thenReturn(movies);
 
+        List<Movie> result = movieBusiness.getMoviesByMovieTags(tagIds);
+
+        assertEquals(2, result.size());
+        verify(movieData, times(1)).getMoviesByMovieTags(tagIds);
+    }
+
+    @Test
+    void getMoviesByMovieTags_tagIdsNullOuVideLanceException() {
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMoviesByMovieTags(null));
+        assertThrows(WebApplicationException.class, () -> movieBusiness.getMoviesByMovieTags(List.of()));
+    }
+
+    @Test
+    void getMoviesByMovieTags_retourne204SiAucunFilmTrouve() {
+        List<Integer> tagIds = List.of(1);
+        when(movieData.getMoviesByMovieTags(tagIds)).thenReturn(List.of());
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.getMoviesByMovieTags(tagIds));
+
+        assertEquals(204, ex.getResponse().getStatus());
+    }
+
+    @Test
+    void updateMovieByMovieId_delegueAMovieDataEtRetourneMovie() {
+        Movie input = createValidMovie();
+        when(movieData.updateMovieByMovieId(1, input)).thenReturn(input);
+
+        Movie result = movieBusiness.updateMovieByMovieId(1, input);
+
+        assertEquals(input, result);
+        verify(movieData, times(1)).updateMovieByMovieId(1, input);
+    }
+
+    @Test
+    void updateMovieByMovieId_valideLesChampsEtLanceException() {
+        assertThrows(WebApplicationException.class, () -> movieBusiness.updateMovieByMovieId(-1, new Movie()));
+
+        assertThrows(WebApplicationException.class, () -> movieBusiness.updateMovieByMovieId(1, null));
+
+        Movie invalidMovie = createValidMovie();
+        invalidMovie.title = "";
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.updateMovieByMovieId(1, invalidMovie));
+        assertEquals(422, ex.getResponse().getStatus());
+    }
 
 
 }

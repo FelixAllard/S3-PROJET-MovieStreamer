@@ -5,6 +5,9 @@ import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +34,44 @@ public class MovieBusiness {
     }
 
     public Movie getMovieByMovieId(long id){
-        return movieData.getMovieByMovieId(id);
+        if(id < 0){
+            throw new WebApplicationException(
+                    Response.status(422)
+                            .entity("Unprocessable ID: ID cannot be negative")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        Movie movie = movieData.getMovieByMovieId(id);
+        if(movie == null){
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("Movie not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        return movie;
+    }
+
+    public boolean deleteMovieByMovieId(long id) {
+        if (id < 0)
+            throw new WebApplicationException(
+                    Response.status(422)
+                            .entity("Unprocessable ID: ID cannot be negative")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        boolean isDeleted = movieData.deleteMovieByMovieId(id);
+        if (!isDeleted) {
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("Movie not found")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+        return true;
     }
 
     public Movie getMovieByMovieName(String name) {
@@ -108,5 +148,43 @@ public class MovieBusiness {
         if(movie.thumbnail == null || movie.thumbnail.isEmpty())
             ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
         return movieData.postMovie(movie);
+    }
+
+    public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
+        if (tagIds == null || tagIds.isEmpty())
+            ExceptionUtils.throwException(422, "Tags list cannot be null or empty");
+
+        List<Movie> movies = movieData.getMoviesByMovieTags(tagIds);
+        if (movies.isEmpty())
+            ExceptionUtils.throwException(204, "No content");
+
+        return movies;
+    }
+
+    public Movie updateMovieByMovieId(int id, Movie updatedMovie) {
+        if (id < 0)
+            ExceptionUtils.throwException(422, "Unprocessable ID: ID cannot be negative");
+        if (updatedMovie == null)
+            ExceptionUtils.throwException(400, "Movie Null");
+        if (updatedMovie.description == null || updatedMovie.description.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Description Empty");
+        if (updatedMovie.title == null || updatedMovie.title.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Title Empty");
+        if (updatedMovie.year < 0)
+            ExceptionUtils.throwException(422, "Movie Year Invalid");
+        if (updatedMovie.director == null || updatedMovie.director.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Director Empty");
+        if (updatedMovie.studio == null || updatedMovie.studio.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Studio Empty");
+        if (updatedMovie.writer == null || updatedMovie.writer.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Writer Empty");
+        if (updatedMovie.movieLength < 0)
+            ExceptionUtils.throwException(422, "Movie Length Invalid");
+        if (updatedMovie.language == null || updatedMovie.language.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Language Empty");
+        if (updatedMovie.thumbnail == null || updatedMovie.thumbnail.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
+
+        return movieData.updateMovieByMovieId(id, updatedMovie);
     }
 }

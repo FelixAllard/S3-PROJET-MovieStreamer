@@ -35,6 +35,11 @@ public class MovieData {
         return movieRepository.findById(id);
     }
 
+    @Transactional
+    public boolean deleteMovieByMovieId(long id) {
+        return movieRepository.deleteById(id);
+    }
+    
     public Movie getMovieByMovieName(String name) {
         return movieRepository.find("title", name).firstResult();
     }
@@ -61,6 +66,28 @@ public class MovieData {
         movie.setWatchedMovieUsers(null);
 
         movieRepository.persist(movie);
+        return movie;
+    }
+    public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
+        return movieRepository.findByTagIds(tagIds);
+    }
+
+    @Transactional
+    public Movie updateMovieByMovieId(int id, Movie updatedMovie) {
+        Movie movie = movieRepository.findById((long) id);
+        if (movie == null)
+            ExceptionUtils.throwException(404, "Movie Not Found");
+
+        movie.setTitle(updatedMovie.title == null ? "" : updatedMovie.title);
+        movie.setDescription(updatedMovie.description == null ? "" : updatedMovie.description);
+        movie.setYear(updatedMovie.year);
+        movie.setMovieLength(updatedMovie.movieLength);
+        movie.setThumbnail(updatedMovie.thumbnail == null ? "" : updatedMovie.thumbnail);
+        movie.setDirector(updatedMovie.director == null ? "" : updatedMovie.director);
+        movie.setWriter(updatedMovie.writer == null ? "" : updatedMovie.writer);
+        movie.setStudio(updatedMovie.studio == null ? "" : updatedMovie.studio);
+        movie.setLanguage(updatedMovie.language == null ? "" : updatedMovie.language);
+
         return movie;
     }
 }

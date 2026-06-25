@@ -6,6 +6,7 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.SecurityUtils;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -126,6 +127,54 @@ public class UserPresentationTest {
         verify(userBusiness, times(1)).updateUserRatingByUserId(1L, 2L, 3);
     }
 
+    @Test
+    void disableUser_retourneStatus200SiSucces() {
+        doNothing().when(userBusiness).disableUser(1L);
+
+        Response response = userPresentation.disableUser(1L);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        verify(userBusiness, times(1)).disableUser(1L);
+    }
+
+    @Test
+    void disableUser_retourneStatus400SiIdInvalide() {
+        doThrow(new WebApplicationException(
+                Response.status(400).entity("Invalid user ID provided.").build()
+        )).when(userBusiness).disableUser(0L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.disableUser(0L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).disableUser(0L);
+    }
+
+    @Test
+    void disableUser_retourneStatus404SiUserInexistant() {
+        doThrow(new WebApplicationException(
+                Response.status(404).entity("User not found in database.").build()
+        )).when(userBusiness).disableUser(99L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.disableUser(99L));
+
+        assertEquals(404, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).disableUser(99L);
+    }
+
+    @Test
+    void disableUser_retourneStatus500SiKeycloakEchoue() {
+        doThrow(new WebApplicationException(
+                Response.status(500).entity("Failed to disable user in Keycloak.").build()
+        )).when(userBusiness).disableUser(1L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.disableUser(1L));
+
+        assertEquals(500, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).disableUser(1L);
+    }
 
     @Test
     void getCurrentUser_me_succes_retourneStatus200AvecUtilisateurConnecte() {

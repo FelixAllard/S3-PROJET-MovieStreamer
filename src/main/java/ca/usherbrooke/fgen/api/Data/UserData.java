@@ -9,6 +9,8 @@ import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.representations.idm.UserRepresentation;
 
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.List;
 public class UserData {
     private final UserRepository userRepository;
     private final MovieRepository movieRepository;
+
 
     public UserData(UserRepository userRepository, MovieRepository movieRepository) {
         this.userRepository = userRepository;
@@ -37,7 +40,8 @@ public class UserData {
         return userRepository.findById(id);
     }
 
-    @Transactional
+
+
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating){
         User user = userRepository.findById(userId);
 

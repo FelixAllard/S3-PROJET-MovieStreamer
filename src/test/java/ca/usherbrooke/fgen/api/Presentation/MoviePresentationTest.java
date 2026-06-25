@@ -3,6 +3,7 @@ package ca.usherbrooke.fgen.api.Presentation;
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.Entities.Movie;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,17 +78,43 @@ public class MoviePresentationTest {
     @Test
     void getMovieByMovieId_retourneStatus404_siMovieInexistant() {
         // Arrange
-        when(movieBusiness.getMovieByMovieId(99L)).thenReturn(null);
+        when(movieBusiness.getMovieByMovieId(99L))
+                .thenThrow(new WebApplicationException(
+                        Response.status(404).entity("Movie not found").build()
+                ));
 
-        // Act
-        Response response = moviePresentation.getMovieByMovieId(99L);
+        // Act + Assert
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.getMovieByMovieId(99L));
 
-        // Assert
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(404, ex.getResponse().getStatus());
         verify(movieBusiness, times(1)).getMovieByMovieId(99L);
     }
 
     @Test
+    void deleteMovieByMovieId_retourneStatus204SiMovieSupprime() {
+        when(movieBusiness.deleteMovieByMovieId(1L)).thenReturn(true);
+
+        Response response = moviePresentation.deleteMovieByMovieId(1L);
+
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        verify(movieBusiness, times(1)).deleteMovieByMovieId(1L);
+    }
+
+    @Test
+    void deleteMovieByMovieId_retourneStatus404SiMovieInexistant() {
+        when(movieBusiness.deleteMovieByMovieId(99L))
+                .thenThrow(new WebApplicationException(
+                        Response.status(404).entity("Movie not found").build()
+                ));
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.deleteMovieByMovieId(99L));
+
+        assertEquals(404, ex.getResponse().getStatus());
+        verify(movieBusiness, times(1)).deleteMovieByMovieId(99L);
+    }
+
     void getMovieByMovieName_retourneStatus200AvecMovie() {
         Movie movie = new Movie();
         movie.title = "Interstellar";
@@ -148,7 +175,53 @@ public class MoviePresentationTest {
         assertEquals(movie, response.getEntity());
     }
 
+    @Test
+    void getMoviesByMovieTags_retourneStatus200AvecListe() {
+        List<Integer> tagIds = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie());
+        when(movieBusiness.getMoviesByMovieTags(tagIds)).thenReturn(movies);
 
+        Response response = moviePresentation.getMoviesByMovieTags(tagIds);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(movies, response.getEntity());
+        verify(movieBusiness, times(1)).getMoviesByMovieTags(tagIds);
+    }
+
+    @Test
+    void getMoviesByMovieTags_propagationExceptionBusiness() {
+        List<Integer> tagIds = List.of(99);
+        when(movieBusiness.getMoviesByMovieTags(tagIds))
+                .thenThrow(new WebApplicationException(Response.status(204).build()));
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.getMoviesByMovieTags(tagIds));
+
+        assertEquals(204, ex.getResponse().getStatus());
+    }
+
+    @Test
+    void updateMovieByMovieId_retourne200AvecMovieMisAJour() {
+        Movie input = new Movie();
+        input.title = "New Title";
+        when(movieBusiness.updateMovieByMovieId(1, input)).thenReturn(input);
+
+        Response response = moviePresentation.updateMovieByMovieId(1, input);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(input, response.getEntity());
+        verify(movieBusiness).updateMovieByMovieId(1, input);
+    }
+
+    @Test
+    void updateMovieByMovieId_retourneExceptionSiErreurBusiness() {
+        Movie input = new Movie();
+        when(movieBusiness.updateMovieByMovieId(anyInt(), any(Movie.class)))
+                .thenThrow(new WebApplicationException(422));
+
+        assertThrows(WebApplicationException.class,
+                () -> moviePresentation.updateMovieByMovieId(1, input));
+    }
 
 
 }

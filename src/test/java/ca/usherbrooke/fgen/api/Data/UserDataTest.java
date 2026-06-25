@@ -1,5 +1,6 @@
 package ca.usherbrooke.fgen.api.Data;
 
+import ca.usherbrooke.fgen.api.Business.UserService;
 import ca.usherbrooke.fgen.api.DAO.MovieRepository;
 import ca.usherbrooke.fgen.api.DAO.UserRepository;
 import ca.usherbrooke.fgen.api.Entities.Movie;
@@ -7,8 +8,12 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import jakarta.ws.rs.WebApplicationException;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -22,12 +27,19 @@ public class UserDataTest {
     private UserRepository userRepository;
     private MovieRepository movieRepository;
     private UserData userData;
+    private Keycloak keycloak;
+    private UserService userService;
+    private JsonWebToken jwt;
 
     @BeforeEach
     void setUp() {
         userRepository = Mockito.mock(UserRepository.class);
         movieRepository = Mockito.mock(MovieRepository.class);
         userData = new UserData(userRepository, movieRepository);
+        keycloak = Mockito.mock(Keycloak.class, Mockito.withSettings().defaultAnswer(Mockito.RETURNS_DEEP_STUBS));
+        jwt = Mockito.mock(JsonWebToken.class);
+        userService= new UserService(jwt,userRepository,keycloak);
+
     }
 
     @Test
@@ -74,6 +86,51 @@ public class UserDataTest {
     }
 
     @Test
+    void disableUser_desactiveUtilisateurDansKeycloak() {
+        User user = new User();
+        user.setKeycloakId("keycloak-uuid-123");
+
+        UserResource userResource = mock(UserResource.class);
+        UserRepresentation keycloakUser = new UserRepresentation();
+        keycloakUser.setEnabled(true);
+
+        when(userRepository.findById(1L)).thenReturn(user);
+        when(keycloak.realm("usager").users().get("keycloak-uuid-123")).thenReturn(userResource);
+        when(userResource.toRepresentation()).thenReturn(keycloakUser);
+        doNothing().when(userResource).update(keycloakUser);
+
+        userService.disableUser(1L);
+
+        assertFalse(keycloakUser.isEnabled());
+        verify(userResource, times(1)).update(keycloakUser);
+    }
+
+    @Test
+    void disableUser_lanceExceptionSiUserInexistant() {
+        when(userRepository.findById(99L)).thenReturn(null);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userService.disableUser(99L));
+
+        assertEquals(404, ex.getResponse().getStatus());
+        verify(keycloak, never()).realm(anyString());
+    }
+
+    @Test
+    void disableUser_lanceExceptionSiKeycloakEchoue() {
+        User user = new User();
+        user.setKeycloakId("keycloak-uuid-123");
+
+        when(userRepository.findById(1L)).thenReturn(user);
+        when(keycloak.realm("usager").users().get("keycloak-uuid-123"))
+                .thenThrow(new RuntimeException("Keycloak down"));
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userService.disableUser(1L));
+
+        assertEquals(500, ex.getResponse().getStatus());
+    }
+    
     void updateUserRatingByUserId_Positive()
     {
         Movie movie = new Movie();

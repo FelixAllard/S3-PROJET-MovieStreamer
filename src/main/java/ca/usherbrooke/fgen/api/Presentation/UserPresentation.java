@@ -9,6 +9,10 @@ import ca.usherbrooke.fgen.api.Utils.SecurityUtils;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
@@ -55,7 +59,6 @@ public class UserPresentation {
     @RolesAllowed({"user", "admin"})
     public Response getUserByUserId(@PathParam("id") long id) {
         User user = SecurityUtils.verifyOwnershipOrAdmin(id, userBusiness, jwt, securityContext);
-
         return Response.ok(user).build();
     }
 
@@ -96,5 +99,13 @@ public class UserPresentation {
                 registrationPayload.getKeycloakId()
         );
         return Response.status(Response.Status.CREATED).entity(created).build();
+    }
+
+    @PUT
+    @Path("{id}/disable")
+    @RolesAllowed({"admin"})
+    public Response disableUser(@PathParam("id") long id) {
+        userBusiness.disableUser(id);
+        return Response.ok().build();
     }
 }
