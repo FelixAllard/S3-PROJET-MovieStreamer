@@ -2,7 +2,6 @@ package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.MovieData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
-import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -72,7 +71,7 @@ public class MovieBusiness {
                             .build()
             );
         }
-        return isDeleted;
+        return true;
     }
 
     public Movie getMovieByMovieName(String name) {
