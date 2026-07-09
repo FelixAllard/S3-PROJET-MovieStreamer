@@ -187,4 +187,17 @@ public class MovieBusiness {
 
         return movieData.updateMovieByMovieId(id, updatedMovie);
     }
+
+    public List<Movie> searchMovies(List<Integer> tags, Integer yearMin, Integer yearMax,
+                                    String language, String director, String studio,
+                                    String writer, String title) {
+        if (yearMin != null && yearMin < 0)
+            ExceptionUtils.throwException(422, "Year Min cannot be negative");
+        if (yearMax != null && yearMax < 0)
+            ExceptionUtils.throwException(422, "Year Max cannot be negative");
+        if (yearMin != null && yearMax != null && yearMin > yearMax)
+            ExceptionUtils.throwException(422, "Year Min cannot be greater than Year Max");
+
+        return movieData.searchMovies(tags, yearMin, yearMax, language, director, studio, writer, title);
+    }
 }

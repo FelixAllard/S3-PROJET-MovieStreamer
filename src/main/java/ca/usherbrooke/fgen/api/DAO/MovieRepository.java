@@ -30,4 +30,53 @@ public class MovieRepository implements PanacheRepository<Movie> {
                 .setParameter("tagIds", tagIds)
                 .getResultList();
     }
+
+    public List<Movie> searchMovies(List<Integer> tags, Integer yearMin, Integer yearMax,
+                                    String language, String director, String studio,
+                                    String writer, String title) {
+        StringBuilder query = new StringBuilder("SELECT DISTINCT m FROM Movie m");
+
+        if (tags != null && !tags.isEmpty())
+            query.append(" JOIN m.tags t");
+
+        query.append(" WHERE 1=1");
+
+        if (tags != null && !tags.isEmpty())
+            query.append(" AND t.id IN :tags");
+        if (yearMin != null)
+            query.append(" AND m.year >= :yearMin");
+        if (yearMax != null)
+            query.append(" AND m.year <= :yearMax");
+        if (language != null)
+            query.append(" AND LOWER(m.language) LIKE :language");
+        if (director != null)
+            query.append(" AND LOWER(m.director) LIKE :director");
+        if (studio != null)
+            query.append(" AND LOWER(m.studio) LIKE :studio");
+        if (writer != null)
+            query.append(" AND LOWER(m.writer) LIKE :writer");
+        if (title != null)
+            query.append(" AND LOWER(m.title) LIKE :title");  // ← élastique avec LIKE
+
+        var q = getEntityManager().createQuery(query.toString(), Movie.class);
+
+        if (tags != null && !tags.isEmpty())
+            q.setParameter("tags", tags);
+        if (yearMin != null)
+            q.setParameter("yearMin", yearMin);
+        if (yearMax != null)
+            q.setParameter("yearMax", yearMax);
+        if (language != null)
+            q.setParameter("language", "%" + language.toLowerCase() + "%");
+        if (director != null)
+            q.setParameter("director", "%" + director.toLowerCase() + "%");
+        if (studio != null)
+            q.setParameter("studio", "%" + studio.toLowerCase() + "%");
+        if (writer != null)
+            q.setParameter("writer", "%" + writer.toLowerCase() + "%");
+        if (title != null)
+            q.setParameter("title", "%" + title.toLowerCase() + "%");  // ← "in" → %in%
+
+        return q.getResultList();
+    }
 }

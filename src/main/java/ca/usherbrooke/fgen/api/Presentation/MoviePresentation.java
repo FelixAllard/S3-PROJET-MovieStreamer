@@ -105,4 +105,21 @@ public class MoviePresentation {
         Movie updated = movieBusiness.updateMovieByMovieId(id, movie);
         return Response.ok(updated).build();
     }
+
+    @GET
+    @Path("search")
+    @PermitAll
+    public Response searchMovies(
+            @QueryParam("tags") List<Integer> tags,
+            @QueryParam("yearMin") Integer yearMin,
+            @QueryParam("yearMax") Integer yearMax,
+            @QueryParam("language") String language,
+            @QueryParam("director") String director,
+            @QueryParam("studio") String studio,
+            @QueryParam("writer") String writer,
+            @QueryParam("title") String title  // ← ajouté
+    ) {
+        List<Movie> movies = movieBusiness.searchMovies(tags, yearMin, yearMax, language, director, studio, writer, title);
+        return Response.ok(movies).build();
+    }
 }

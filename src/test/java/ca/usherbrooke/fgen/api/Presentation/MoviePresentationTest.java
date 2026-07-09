@@ -223,5 +223,34 @@ public class MoviePresentationTest {
                 () -> moviePresentation.updateMovieByMovieId(1, input));
     }
 
+    @Test
+    void searchMovies_retourneStatus200AvecListe() {
+        // Arrange
+        List<Integer> tags = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie(), new Movie());
 
+        when(movieBusiness.searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter"))
+                .thenReturn(movies);
+
+        // Act
+        Response response = moviePresentation.searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter");
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(movies, response.getEntity());
+        verify(movieBusiness, times(1)).searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter");
+    }
+
+    @Test
+    void searchMovies_propageLExceptionDuBusiness() {
+        // Arrange
+        when(movieBusiness.searchMovies(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenThrow(new WebApplicationException(Response.status(422).build()));
+
+        // Act & Assert
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> moviePresentation.searchMovies(null, 2020, 2000, null, null, null, null, null)
+        );
+        assertEquals(422, ex.getResponse().getStatus());
+    }
 }

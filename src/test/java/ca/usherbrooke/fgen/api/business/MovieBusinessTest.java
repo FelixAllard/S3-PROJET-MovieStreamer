@@ -335,5 +335,32 @@ public class MovieBusinessTest {
         assertEquals(422, ex.getResponse().getStatus());
     }
 
+    @Test
+    void searchMovies_delegueAMovieDataEtRetourneListe() {
+        // Arrange
+        List<Integer> tags = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie(), new Movie());
+
+        when(movieData.searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter"))
+                .thenReturn(movies);
+
+        // Act
+        List<Movie> result = movieBusiness.searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter");
+
+        // Assert
+        assertEquals(2, result.size());
+        verify(movieData, times(1)).searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter");
+    }
+
+    @Test
+    void searchMovies_lanceExceptionSiYearMinSuperieurAYearMax() {
+        // Act & Assert
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> movieBusiness.searchMovies(null, 2020, 2000, null, null, null, null, null)
+        );
+        assertEquals(422, ex.getResponse().getStatus());
+        verify(movieData, never()).searchMovies(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
 
 }
