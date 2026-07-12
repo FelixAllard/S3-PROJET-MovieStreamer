@@ -7,6 +7,7 @@ import Login from '../views/Login.vue';
 import AdminAllUsers from '../views/AdminAllUsers.vue';
 import SignUp from '../views/SignUp.vue';
 import SingleUser from '../views/SingleUser.vue';
+import WatchList from '../views/WatchList.vue';
 
 
 const router = createRouter({
@@ -42,6 +43,11 @@ const router = createRouter({
             path: '/user/:id',
             component: SingleUser,
             meta: { requiresAuth: true }
+        },
+        {
+            path: '/watchlist',
+            component: WatchList,
+            meta: { requiresAuth: true }
         }
 
         /*,
@@ -53,6 +59,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+    if (to.meta.requiresAuth && !localStorage.getItem('token')) {
+        return next('/login')
+    }
+
     if (to.meta.requiresAdmin) {
         const token = localStorage.getItem('token')
         

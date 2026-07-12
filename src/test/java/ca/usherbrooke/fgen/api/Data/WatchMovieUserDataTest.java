@@ -1,7 +1,9 @@
 package ca.usherbrooke.fgen.api.Data;
 
 import ca.usherbrooke.fgen.api.DAO.WatchMovieUserRepository;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.MovieStatus;
+import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,5 +114,68 @@ public class WatchMovieUserDataTest {
         assertTrue(result.isEmpty());
         verify(watchMovieUserRepository, times(1))
                 .find("user.id = ?1 and movie.id = ?2", userId, movieId);
+    }
+
+    @Test
+    void isMovieSavedByUserIdAndMovieId_returnsTrueWhenRepositoryCountsOneRow() {
+        long userId = 1L;
+        long movieId = 10L;
+
+        when(watchMovieUserRepository.count("user.id = ?1 and movie.id = ?2 and saved = true", userId, movieId))
+                .thenReturn(1L);
+
+        boolean result = watchMovieUserData.isMovieSavedByUserIdAndMovieId(userId, movieId);
+
+        assertTrue(result);
+        verify(watchMovieUserRepository, times(1))
+                .count("user.id = ?1 and movie.id = ?2 and saved = true", userId, movieId);
+    }
+
+    @Test
+    void updateSavedStatus_updatesExistingInteraction() {
+        long userId = 1L;
+        long movieId = 10L;
+        User user = new User();
+        user.setId(userId);
+        Movie movie = new Movie();
+        movie.setId(movieId);
+        WatchMovieUser interaction = new WatchMovieUser();
+        interaction.setSaved(false);
+
+        PanacheQuery<WatchMovieUser> mockQuery = Mockito.mock(PanacheQuery.class);
+        when(watchMovieUserRepository.find("user.id = ?1 and movie.id = ?2", userId, movieId))
+                .thenReturn(mockQuery);
+        when(mockQuery.firstResultOptional())
+                .thenReturn(Optional.of(interaction));
+
+        WatchMovieUser result = watchMovieUserData.updateSavedStatus(user, movie, true);
+
+        assertEquals(interaction, result);
+        assertTrue(result.isSaved());
+        verify(watchMovieUserRepository, never()).persist(any(WatchMovieUser.class));
+    }
+
+    @Test
+    void updateSavedStatus_createsInteractionWhenMissing() {
+        long userId = 1L;
+        long movieId = 10L;
+        User user = new User();
+        user.setId(userId);
+        Movie movie = new Movie();
+        movie.setId(movieId);
+
+        PanacheQuery<WatchMovieUser> mockQuery = Mockito.mock(PanacheQuery.class);
+        when(watchMovieUserRepository.find("user.id = ?1 and movie.id = ?2", userId, movieId))
+                .thenReturn(mockQuery);
+        when(mockQuery.firstResultOptional())
+                .thenReturn(Optional.empty());
+
+        WatchMovieUser result = watchMovieUserData.updateSavedStatus(user, movie, true);
+
+        assertEquals(user, result.getUser());
+        assertEquals(movie, result.getMovie());
+        assertEquals(MovieStatus.NOT_WATCHED, result.getStatus());
+        assertTrue(result.isSaved());
+        verify(watchMovieUserRepository, times(1)).persist(result);
     }
 }

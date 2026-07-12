@@ -1,8 +1,10 @@
 package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.WatchMovieUserData;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Entities.MovieStatus;
+import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -13,11 +15,13 @@ public class WatchMovieUserBusiness {
 
     private final WatchMovieUserData watchMovieUserData;
     private final UserBusiness userBusiness;
+    private final MovieBusiness movieBusiness;
 
     @Inject
-    public WatchMovieUserBusiness(WatchMovieUserData watchMovieUserData, UserBusiness userBusiness) {
+    public WatchMovieUserBusiness(WatchMovieUserData watchMovieUserData, UserBusiness userBusiness, MovieBusiness movieBusiness) {
         this.watchMovieUserData = watchMovieUserData;
         this.userBusiness = userBusiness;
+        this.movieBusiness = movieBusiness;
     }
 
     private void validateUserExists(long userId) {
@@ -32,6 +36,13 @@ public class WatchMovieUserBusiness {
     public List<WatchMovieUser> getUserSavedListByUserId(long userId) {
         validateUserExists(userId);
         return watchMovieUserData.getSavedListByUserId(userId);
+    }
+
+    public List<Movie> getUserSavedMoviesByUserId(long userId) {
+        return getUserSavedListByUserId(userId)
+                .stream()
+                .map(WatchMovieUser::getMovie)
+                .toList();
     }
 
     public List<WatchMovieUser> getUserWatchedMoviesByUserId(long userId) {
@@ -64,6 +75,30 @@ public class WatchMovieUserBusiness {
         }
 
         return interaction.getRating();
+    }
+
+    public boolean isMovieSavedByUserIdAndMovieId(long userId, long movieId) {
+        validateUserExists(userId);
+        validateMovieId(movieId);
+        return watchMovieUserData.isMovieSavedByUserIdAndMovieId(userId, movieId);
+    }
+
+    public WatchMovieUser updateSavedStatus(long userId, long movieId, boolean saved) {
+        User user = userBusiness.getUserByUserId(userId);
+        if (user == null) {
+            ExceptionUtils.throwException(404, "User does not exist in the database (has been deleted or was never created)");
+        }
+
+        Movie movie = validateMovieId(movieId);
+        return watchMovieUserData.updateSavedStatus(user, movie, saved);
+    }
+
+    private Movie validateMovieId(long movieId) {
+        if (movieId <= 0) {
+            ExceptionUtils.throwException(400, "Invalid Movie ID");
+        }
+
+        return movieBusiness.getMovieByMovieId(movieId);
     }
 
 }

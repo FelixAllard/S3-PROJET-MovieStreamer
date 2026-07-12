@@ -81,7 +81,7 @@ async function handleLogin() {
     localStorage.setItem('refresh_token', data.refresh_token)
 
     try {
-      const dbUser = await apiClient.get('/api/user/me')
+      const dbUser = await apiClient.get('/user/me')
       if (dbUser && dbUser.id) {
         localStorage.setItem('db_user_id', dbUser.id)
       }
