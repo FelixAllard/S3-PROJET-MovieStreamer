@@ -1,6 +1,22 @@
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import NewMoviesCaroussel from "../components/NewMoviesCaroussel.vue";
 import AnimatedTitle from "../components/AnimatedTitle.vue";
+import { isLoggedIn } from '/src/utils/auth.js'
+
+const loggedIn = ref(isLoggedIn())
+
+function refreshAuthState() {
+  loggedIn.value = isLoggedIn()
+}
+
+onMounted(() => {
+  window.addEventListener('auth-change', refreshAuthState)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('auth-change', refreshAuthState)
+})
 </script>
 
 <template>
@@ -28,7 +44,7 @@ import AnimatedTitle from "../components/AnimatedTitle.vue";
           </button>
         </RouterLink>
 
-        <RouterLink to="/">
+        <RouterLink v-if="loggedIn" to="/watchlist">
           <button class="btn btn-outline-light btn-lg px-4 ms-2">
             Your Watchlist
           </button>

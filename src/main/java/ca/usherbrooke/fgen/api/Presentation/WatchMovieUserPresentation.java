@@ -2,11 +2,13 @@ package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.WatchMovieUserBusiness;
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.SecurityUtils;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -44,6 +46,40 @@ public class WatchMovieUserPresentation {
         SecurityUtils.verifyOwnershipOrAdmin(userId, userBusiness, jwt, securityContext);
         List<WatchMovieUser> watchlist = watchMovieUserBusiness.getUserSavedListByUserId(userId);
         return Response.ok(watchlist).build();
+    }
+
+    @GET
+    @Path("saved/{userId}/movies")
+    @RolesAllowed({"user", "admin"})
+    public Response getUserSavedMoviesByUserId(@PathParam("userId") long userId) {
+        SecurityUtils.verifyOwnershipOrAdmin(userId, userBusiness, jwt, securityContext);
+        List<Movie> watchlist = watchMovieUserBusiness.getUserSavedMoviesByUserId(userId);
+        return Response.ok(watchlist).build();
+    }
+
+    @GET
+    @Path("saved/{userId}/{movieId}")
+    @RolesAllowed({"user", "admin"})
+    public Response isMovieSavedByUserIdAndMovieId(
+            @PathParam("userId") long userId,
+            @PathParam("movieId") long movieId) {
+
+        SecurityUtils.verifyOwnershipOrAdmin(userId, userBusiness, jwt, securityContext);
+        boolean saved = watchMovieUserBusiness.isMovieSavedByUserIdAndMovieId(userId, movieId);
+        return Response.ok(saved).build();
+    }
+
+    @PUT
+    @Path("saved/{userId}/{movieId}/{saved}")
+    @RolesAllowed({"user", "admin"})
+    public Response updateSavedStatus(
+            @PathParam("userId") long userId,
+            @PathParam("movieId") long movieId,
+            @PathParam("saved") boolean saved) {
+
+        SecurityUtils.verifyOwnershipOrAdmin(userId, userBusiness, jwt, securityContext);
+        WatchMovieUser watchMovieUser = watchMovieUserBusiness.updateSavedStatus(userId, movieId, saved);
+        return Response.ok(watchMovieUser).build();
     }
 
     @GET

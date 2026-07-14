@@ -2,6 +2,7 @@
 import Navbar from '/src/views/Navbar.vue'
 import CinemaShell from '/src/components/CinemaShell.vue'
 import PixelField from '/src/components/PixelField.vue'
+import Footer from '/src/components/Footer.vue'
 </script>
 
 <template>
@@ -19,6 +20,7 @@ import PixelField from '/src/components/PixelField.vue'
       <div class="container-fluid px-3 px-md-4 py-4">
         <router-view />
       </div>
+      <Footer />
     </div>
   </CinemaShell>
 </template>

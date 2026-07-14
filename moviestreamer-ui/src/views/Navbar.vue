@@ -19,7 +19,7 @@ const navItems = computed(() => {
   }
 
   if (currentUsername.value) {
-    return [...baseItems, { label: currentUsername.value, to: '#', isUser: true }]
+    return [...baseItems, { label: 'Watchlist', to: '/watchlist' }, { label: currentUsername.value, to: '#', isUser: true }]
   } else {
     return [...baseItems, { label: 'Login', to: '/login' }]
   }

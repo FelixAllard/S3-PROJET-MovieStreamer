@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.Presentation;
 
 import ca.usherbrooke.fgen.api.Business.WatchMovieUserBusiness;
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import jakarta.ws.rs.WebApplicationException;
@@ -63,6 +64,53 @@ public class WatchMovieUserPresentationTest {
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(List.of(item), response.getEntity());
         verify(watchMovieUserBusiness, times(1)).getUserSavedListByUserId(userId);
+    }
+
+    @Test
+    void getUserSavedMoviesByUserId_returnsStatus200WithMovies() {
+        long userId = 1L;
+        mockAdminAccess(userId);
+
+        Movie movie = new Movie();
+        when(watchMovieUserBusiness.getUserSavedMoviesByUserId(userId)).thenReturn(List.of(movie));
+
+        Response response = presentation.getUserSavedMoviesByUserId(userId);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(List.of(movie), response.getEntity());
+        verify(watchMovieUserBusiness, times(1)).getUserSavedMoviesByUserId(userId);
+    }
+
+    @Test
+    void isMovieSavedByUserIdAndMovieId_returnsStatus200WithBoolean() {
+        long userId = 1L;
+        long movieId = 42L;
+        mockAdminAccess(userId);
+
+        when(watchMovieUserBusiness.isMovieSavedByUserIdAndMovieId(userId, movieId)).thenReturn(true);
+
+        Response response = presentation.isMovieSavedByUserIdAndMovieId(userId, movieId);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(true, response.getEntity());
+        verify(watchMovieUserBusiness, times(1)).isMovieSavedByUserIdAndMovieId(userId, movieId);
+    }
+
+    @Test
+    void updateSavedStatus_returnsStatus200WithInteraction() {
+        long userId = 1L;
+        long movieId = 42L;
+        mockAdminAccess(userId);
+
+        WatchMovieUser interaction = new WatchMovieUser();
+        interaction.setSaved(true);
+        when(watchMovieUserBusiness.updateSavedStatus(userId, movieId, true)).thenReturn(interaction);
+
+        Response response = presentation.updateSavedStatus(userId, movieId, true);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(interaction, response.getEntity());
+        verify(watchMovieUserBusiness, times(1)).updateSavedStatus(userId, movieId, true);
     }
 
 

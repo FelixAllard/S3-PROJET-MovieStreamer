@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { animate } from 'motion-v'
 import apiClient from '/src/services/ApiClient.js'
 import { Movie } from '/src/entities/Movie.js'
+import { isLoggedIn, resolveDbUserId } from '/src/utils/auth.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,11 +17,17 @@ const loading = ref(true)
 const errorMessage = ref('')
 const pageRef = ref(null)
 const contentRef = ref(null)
+const loggedIn = ref(isLoggedIn())
+const userId = ref(null)
+const saved = ref(false)
+const saving = ref(false)
+const watchlistMessage = ref('')
 
 const movieId = computed(() => route.params.id)
 
 onMounted(async () => {
   await fetchMovie()
+  await fetchSavedStatus()
 
   if (pageRef.value) {
     animate(
@@ -55,6 +62,38 @@ async function fetchMovie() {
     errorMessage.value = 'Failed to load movie.'
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchSavedStatus() {
+  if (!loggedIn.value || !movie.value) return
+
+  try {
+    userId.value = await resolveDbUserId(apiClient)
+    if (!userId.value) return
+
+    saved.value = await apiClient.get(`/watch-history/saved/${userId.value}/${movieId.value}`)
+  } catch (err) {
+    console.error('Failed to fetch saved movie status:', err)
+  }
+}
+
+async function toggleSavedStatus() {
+  if (!loggedIn.value || !userId.value || saving.value) return
+
+  try {
+    saving.value = true
+    watchlistMessage.value = ''
+
+    const nextSaved = !saved.value
+    const updated = await apiClient.put(`/watch-history/saved/${userId.value}/${movieId.value}/${nextSaved}`, {})
+    saved.value = Boolean(updated?.saved)
+    watchlistMessage.value = saved.value ? 'Added to your watchlist.' : 'Removed from your watchlist.'
+  } catch (err) {
+    console.error('Failed to update saved movie status:', err)
+    watchlistMessage.value = 'Unable to update your watchlist.'
+  } finally {
+    saving.value = false
   }
 }
 
@@ -113,6 +152,18 @@ function goBack() {
                 <span v-if="movie.year" class="meta-pill">{{ movie.year }}</span>
                 <span v-if="movie.movieLength" class="meta-pill">{{ movie.movieLength }} min</span>
                 <span v-if="movie.language" class="meta-pill">{{ movie.language }}</span>
+              </div>
+
+              <div v-if="loggedIn" class="watchlist-actions mb-3">
+                <button
+                    class="btn watchlist-btn"
+                    :class="{ saved }"
+                    :disabled="saving"
+                    @click="toggleSavedStatus"
+                >
+                  {{ saving ? 'Saving...' : saved ? 'Remove from Watchlist' : 'Add to Watchlist' }}
+                </button>
+                <span v-if="watchlistMessage" class="watchlist-message">{{ watchlistMessage }}</span>
               </div>
 
               <p class="movie-description mb-4">
@@ -266,6 +317,42 @@ function goBack() {
   line-height: 1.75;
   color: rgba(255, 255, 255, 0.88);
   max-width: 60ch;
+}
+
+.watchlist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.watchlist-btn {
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+}
+
+.watchlist-btn:hover {
+  background: rgba(139, 92, 246, 0.22);
+  color: #fff;
+}
+
+.watchlist-btn.saved {
+  background: rgba(139, 92, 246, 0.82);
+  border-color: rgba(196, 181, 253, 0.62);
+}
+
+.watchlist-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.watchlist-message {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
 }
 
 .section-label {

@@ -1,8 +1,10 @@
 package ca.usherbrooke.fgen.api.business;
 
+import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Business.UserBusiness;
 import ca.usherbrooke.fgen.api.Business.WatchMovieUserBusiness;
 import ca.usherbrooke.fgen.api.Data.WatchMovieUserData;
+import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.MovieStatus;
 import ca.usherbrooke.fgen.api.Entities.User;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
@@ -21,13 +23,15 @@ public class WatchMovieUserBusinessTest {
 
     private WatchMovieUserData watchMovieUserData;
     private UserBusiness userBusiness;
+    private MovieBusiness movieBusiness;
     private WatchMovieUserBusiness watchMovieUserBusiness;
 
     @BeforeEach
     void setUp() {
         watchMovieUserData = Mockito.mock(WatchMovieUserData.class);
         userBusiness = Mockito.mock(UserBusiness.class);
-        watchMovieUserBusiness = new WatchMovieUserBusiness(watchMovieUserData, userBusiness);
+        movieBusiness = Mockito.mock(MovieBusiness.class);
+        watchMovieUserBusiness = new WatchMovieUserBusiness(watchMovieUserData, userBusiness, movieBusiness);
     }
 
     // Utility helper to simulate that a user exists in the database
@@ -158,5 +162,73 @@ public class WatchMovieUserBusinessTest {
 
         assertEquals(4, result);
         verify(watchMovieUserData, times(1)).getByUserIdAndMovieId(userId, movieId);
+    }
+
+    @Test
+    void getUserSavedMoviesByUserId_returnsMoviesFromSavedInteractions() {
+        long userId = 1L;
+        mockUserExists(userId);
+
+        Movie movie = new Movie();
+        WatchMovieUser interaction = new WatchMovieUser();
+        interaction.setMovie(movie);
+
+        when(watchMovieUserData.getSavedListByUserId(userId)).thenReturn(List.of(interaction));
+
+        List<Movie> result = watchMovieUserBusiness.getUserSavedMoviesByUserId(userId);
+
+        assertEquals(List.of(movie), result);
+        verify(watchMovieUserData, times(1)).getSavedListByUserId(userId);
+    }
+
+    @Test
+    void isMovieSavedByUserIdAndMovieId_throws400_whenMovieIdIsInvalid() {
+        long userId = 1L;
+        mockUserExists(userId);
+
+        WebApplicationException exception = assertThrows(
+                WebApplicationException.class,
+                () -> watchMovieUserBusiness.isMovieSavedByUserIdAndMovieId(userId, 0L)
+        );
+
+        assertEquals(400, exception.getResponse().getStatus());
+        verifyNoInteractions(movieBusiness);
+    }
+
+    @Test
+    void isMovieSavedByUserIdAndMovieId_delegatesToWatchMovieUserData() {
+        long userId = 1L;
+        long movieId = 5L;
+        mockUserExists(userId);
+
+        Movie movie = new Movie();
+        when(movieBusiness.getMovieByMovieId(movieId)).thenReturn(movie);
+        when(watchMovieUserData.isMovieSavedByUserIdAndMovieId(userId, movieId)).thenReturn(true);
+
+        boolean result = watchMovieUserBusiness.isMovieSavedByUserIdAndMovieId(userId, movieId);
+
+        assertTrue(result);
+        verify(watchMovieUserData, times(1)).isMovieSavedByUserIdAndMovieId(userId, movieId);
+    }
+
+    @Test
+    void updateSavedStatus_validatesUserAndMovieThenDelegatesToData() {
+        long userId = 1L;
+        long movieId = 5L;
+
+        User user = new User();
+        user.setId(userId);
+        Movie movie = new Movie();
+        movie.setId(movieId);
+        WatchMovieUser interaction = new WatchMovieUser();
+
+        when(userBusiness.getUserByUserId(userId)).thenReturn(user);
+        when(movieBusiness.getMovieByMovieId(movieId)).thenReturn(movie);
+        when(watchMovieUserData.updateSavedStatus(user, movie, true)).thenReturn(interaction);
+
+        WatchMovieUser result = watchMovieUserBusiness.updateSavedStatus(userId, movieId, true);
+
+        assertEquals(interaction, result);
+        verify(watchMovieUserData, times(1)).updateSavedStatus(user, movie, true);
     }
 }
