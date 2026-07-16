@@ -8,6 +8,7 @@ import AdminAllUsers from '../views/AdminAllUsers.vue';
 import SignUp from '../views/SignUp.vue';
 import SingleUser from '../views/SingleUser.vue';
 import WatchList from '../views/WatchList.vue';
+import EditSingleMovie from '../views/EditMoviePage.vue';
 
 
 const router = createRouter({
@@ -48,6 +49,11 @@ const router = createRouter({
             path: '/watchlist',
             component: WatchList,
             meta: { requiresAuth: true }
+        },
+        {
+            path:'/movies/:id/edit',
+            component: EditSingleMovie,
+            meta: { requiresAdmin: true }
         }
 
         /*,
