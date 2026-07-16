@@ -12,6 +12,8 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RoleMappingResource;
+import org.keycloak.admin.client.resource.RoleScopeResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mockito.Mockito;
@@ -94,9 +96,15 @@ public class UserDataTest {
         UserRepresentation keycloakUser = new UserRepresentation();
         keycloakUser.setEnabled(true);
 
+        RoleMappingResource roleMappingResource = mock(RoleMappingResource.class);
+        RoleScopeResource roleScopeResource = mock(RoleScopeResource.class);
+
         when(userRepository.findById(1L)).thenReturn(user);
         when(keycloak.realm("usager").users().get("keycloak-uuid-123")).thenReturn(userResource);
         when(userResource.toRepresentation()).thenReturn(keycloakUser);
+        when(userResource.roles()).thenReturn(roleMappingResource);
+        when(roleMappingResource.realmLevel()).thenReturn(roleScopeResource);
+        when(roleScopeResource.listEffective()).thenReturn(List.of());
         doNothing().when(userResource).update(keycloakUser);
 
         userService.setUserEnabledStatus(1L, false);
