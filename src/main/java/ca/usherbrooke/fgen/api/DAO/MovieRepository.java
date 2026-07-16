@@ -31,6 +31,20 @@ public class MovieRepository implements PanacheRepository<Movie> {
                 .getResultList();
     }
 
+    public List<Movie> findMoviesByPartialName(String title) {
+        StringBuilder query = new StringBuilder("SELECT DISTINCT m FROM Movie m");
+
+        if (title != null)
+            query.append(" WHERE LOWER(m.title) LIKE :title");
+
+        var q = getEntityManager().createQuery(query.toString(), Movie.class);
+
+        if (title != null)
+            q.setParameter("title", "%" + title.toLowerCase() + "%");
+
+        return q.getResultList();
+    }
+
     public List<Movie> searchMovies(List<Integer> tags, Integer yearMin, Integer yearMax,
                                     String language, String director, String studio,
                                     String writer, String title) {

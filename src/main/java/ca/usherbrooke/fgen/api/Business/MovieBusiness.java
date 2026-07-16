@@ -200,4 +200,9 @@ public class MovieBusiness {
 
         return movieData.searchMovies(tags, yearMin, yearMax, language, director, studio, writer, title);
     }
+
+    public List<Movie> getMoviesByPartialTitle(String title) {
+        return movieData.getMoviesByPartialTitle(title);
+
+    }
 }
