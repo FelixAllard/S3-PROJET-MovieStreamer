@@ -67,6 +67,14 @@ public class MoviePresentation {
     }
 
     @GET
+    @Path("partial-title/{title}")
+    @PermitAll
+    public Response getMoviesByPartialTitle(@PathParam("title") String title){
+        List<Movie> movies = movieBusiness.getMoviesByPartialTitle(title);
+        return Response.ok(movies).build();
+    }
+
+    @GET
     @Path("{id}/rating")
     @PermitAll
     public Response getMovieRatingByMovieId(@PathParam("id") long id){
