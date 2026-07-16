@@ -2,9 +2,10 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
 
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { animate } from 'motion-v'
+import Hls from 'hls.js'
 import apiClient from '/src/services/ApiClient.js'
 import { Movie } from '/src/entities/Movie.js'
 import { isLoggedIn, resolveDbUserId } from '/src/utils/auth.js'
@@ -22,6 +23,23 @@ const userId = ref(null)
 const saved = ref(false)
 const saving = ref(false)
 const watchlistMessage = ref('')
+
+// Track-Selection States
+const audioTracks = ref([])
+const subtitleTracks = ref([])
+const selectedAudioIndex = ref(null)
+const selectedSubtitleIndex = ref(null) // null means 'Off'
+const playSessionId = ref('')
+const mediaSourceId = ref('')
+
+// Streaming states
+const isPlaying = ref(false)
+const streamUrl = ref('')
+const loadingStream = ref(false)
+const isVideoBuffering = ref(false)
+
+const videoPlayerRef = ref(null)
+let hlsInstance = null
 
 const movieId = computed(() => route.params.id)
 
@@ -46,12 +64,24 @@ onMounted(async () => {
   }
 })
 
+onBeforeUnmount(() => {
+  destroyHls()
+})
+
+function destroyHls() {
+  if (hlsInstance) {
+    hlsInstance.destroy()
+    hlsInstance = null
+  }
+}
+
 async function fetchMovie() {
   try {
     loading.value = true
     errorMessage.value = ''
 
-    const data = await apiClient.get(`/movie/${movieId.value}`)
+    const encodedId = encodeURIComponent(movieId.value)
+    const data = await apiClient.get(`/movie/${encodedId}`)
     movie.value = data ? new Movie(data) : null
 
     if (!movie.value) {
@@ -72,7 +102,8 @@ async function fetchSavedStatus() {
     userId.value = await resolveDbUserId(apiClient)
     if (!userId.value) return
 
-    saved.value = await apiClient.get(`/watch-history/saved/${userId.value}/${movieId.value}`)
+    const encodedId = encodeURIComponent(movieId.value)
+    saved.value = await apiClient.get(`/watch-history/saved/${userId.value}/${encodedId}`)
   } catch (err) {
     console.error('Failed to fetch saved movie status:', err)
   }
@@ -86,7 +117,8 @@ async function toggleSavedStatus() {
     watchlistMessage.value = ''
 
     const nextSaved = !saved.value
-    const updated = await apiClient.put(`/watch-history/saved/${userId.value}/${movieId.value}/${nextSaved}`, {})
+    const encodedId = encodeURIComponent(movieId.value)
+    const updated = await apiClient.put(`/watch-history/saved/${userId.value}/${encodedId}/${nextSaved}`, {})
     saved.value = Boolean(updated?.saved)
     watchlistMessage.value = saved.value ? 'Added to your watchlist.' : 'Removed from your watchlist.'
   } catch (err) {
@@ -95,6 +127,190 @@ async function toggleSavedStatus() {
   } finally {
     saving.value = false
   }
+}
+
+// 1. Fetch Tracks (PlaybackInfo) and Start Stream
+async function startStreaming() {
+  if (loadingStream.value || !movie.value) return
+
+  loadingStream.value = true
+  isVideoBuffering.value = true
+  
+  try {
+    const encodedId = encodeURIComponent(movieId.value)
+
+    // Step A: Fetch playback info containing audio/sub streams from your proxy backend or directly
+    // This is mapping Jellyfin's GET /Items/{Id}/PlaybackInfo?UserId={UserId}
+    const playbackInfo = await apiClient.get(`/movie/${encodedId}/playback-info`)
+    
+    if (playbackInfo && playbackInfo.MediaSources && playbackInfo.MediaSources.length > 0) {
+      const source = playbackInfo.MediaSources[0]
+      mediaSourceId.value = source.Id
+      
+      playSessionId.value = playbackInfo.PlaySessionId
+
+      // Map streams from media source metadata
+      const allStreams = source.MediaStreams || []
+      
+      // Parse Audio Tracks
+      audioTracks.value = allStreams
+        .filter(s => s.Type === 'Audio')
+        .map(s => ({
+          index: s.Index,
+          label: s.DisplayTitle || s.Language || `Audio Track #${s.Index}`
+        }))
+      
+      // Select the default audio track if not set
+      if (selectedAudioIndex.value === null && audioTracks.value.length > 0) {
+        const defaultAudio = allStreams.find(s => s.Type === 'Audio' && s.IsDefault)
+        selectedAudioIndex.value = defaultAudio ? defaultAudio.Index : audioTracks.value[0].index
+      }
+
+      // Parse Subtitle Tracks
+      subtitleTracks.value = allStreams
+        .filter(s => s.Type === 'Subtitle')
+        .map(s => ({
+          index: s.Index,
+          label: s.DisplayTitle || s.Language || `Subtitle Track #${s.Index}`
+        }))
+    }
+
+    // Step B: Ask your spring boot backend for the computed master stream url using our selected parameters
+    await loadActiveTrackStream()
+
+  } catch (err) {
+    console.error('Streaming error:', err)
+    alert('Failed to load playback parameters. Playing default profile instead.')
+    isPlaying.value = true
+    // Fallback URL mechanism if playbackInfo fails
+    streamUrl.value = `https://jellyfin.seeroy.com/Videos/${movieId.value}/master.m3u8?api_key=bdc25e36b1ef4699acd7cada300310ae&MediaSourceId=${movieId.value}`
+    setTimeout(() => { initPlayer() }, 50)
+  } finally {
+    loadingStream.value = false
+  }
+}
+
+// 2. Load (or Re-load) Stream URL with track parameters
+async function loadActiveTrackStream() {
+  isVideoBuffering.value = true
+  const encodedId = encodeURIComponent(movieId.value)
+  
+  // Build query string reflecting selected audio & subtitle indices
+  let queryParams = `?playSessionId=${playSessionId.value}&mediaSourceId=${mediaSourceId.value}`
+  if (selectedAudioIndex.value !== null) {
+    queryParams += `&audioStreamIndex=${selectedAudioIndex.value}`
+  }
+  if (selectedSubtitleIndex.value !== null) {
+    queryParams += `&subtitleStreamIndex=${selectedSubtitleIndex.value}`
+  }
+
+  try {
+    const data = await apiClient.get(`/movie/${encodedId}/stream${queryParams}`)
+    
+    if (data && data.streamUrl) {
+      streamUrl.value = data.streamUrl
+      isPlaying.value = true
+
+      // Re-initialize player with new source stream
+      await nextTick()
+      initPlayer()
+    } else {
+      throw new Error('No stream URL received')
+    }
+  } catch (err) {
+    console.error('Track change error:', err)
+  }
+}
+
+async function onTrackChange() {
+  destroyHls()
+  await loadActiveTrackStream()
+}
+
+function initPlayer() {
+  const video = videoPlayerRef.value
+  if (!video) return
+
+  destroyHls()
+
+  if (streamUrl.value.includes('.m3u8')) {
+    if (Hls.isSupported()) {
+      // 1. Configure HLS.js to enable subtitles and render them natively in the DOM
+      hlsInstance = new Hls({
+        enableSubtitle: true,
+        subtitlePreference: {
+          shareTextFields: true
+        }
+      })
+      
+      hlsInstance.loadSource(streamUrl.value)
+      hlsInstance.attachMedia(video)
+      
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play()
+      })
+
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log("Audio:", hlsInstance.audioTracks)
+        console.log("Subtitles:", hlsInstance.subtitleTracks)
+      })
+      
+      hlsInstance.subtitleTracks
+
+      // 2. Listen for subtitle tracks being loaded by HLS.js
+      hlsInstance.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (event, data) => {
+        console.log('Subtitle tracks found in HLS stream:', data.subtitleTracks)
+      })
+
+      // 3. Force HLS.js to switch to the selected subtitle stream when it changes
+      if (selectedSubtitleIndex.value !== null) {
+        hlsInstance.on(Hls.Events.SUBTITLE_TRACK_LOADED, () => {
+          // Tell HLS.js to actively render the subtitle stream matching our index
+          const hlsSubTracks = hlsInstance.subtitleTracks
+          const matchIndex = hlsSubTracks.findIndex(t => t.id === selectedSubtitleIndex.value)
+          if (matchIndex !== -1) {
+            hlsInstance.subtitleTrack = matchIndex
+          }
+        })
+      } else {
+        // Turn subtitles off in HLS.js
+        hlsInstance.subtitleTrack = -1
+      }
+      
+      hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          console.error('HLS stream encountered a fatal decoder error:', data)
+        }
+      })
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // For Safari (Native HLS handling)
+      video.src = streamUrl.value
+      video.addEventListener('loadedmetadata', () => {
+        video.play()
+        // Enable native text tracks if Safari
+        if (selectedSubtitleIndex.value !== null && video.textTracks) {
+          for (let i = 0; i < video.textTracks.length; i++) {
+            if (i === selectedSubtitleIndex.value) {
+              video.textTracks[i].mode = 'showing'
+            } else {
+              video.textTracks[i].mode = 'disabled'
+            }
+          }
+        }
+      })
+    }
+  } else {
+    video.src = streamUrl.value
+    video.play()
+  }
+}
+
+function onVideoWaiting() {
+  isVideoBuffering.value = true
+}
+
+function onVideoPlaying() {
+  isVideoBuffering.value = false
 }
 
 function goBack() {
@@ -119,7 +335,8 @@ function goBack() {
       </div>
 
       <div v-if="loading" class="state-box text-center text-white">
-        Loading movie...
+        <div class="spinner-border text-primary spinner-purple mb-3" role="status"></div>
+        <p class="mb-0">Loading movie...</p>
       </div>
 
       <div v-else-if="errorMessage" class="state-box text-center text-white">
@@ -132,7 +349,7 @@ function goBack() {
           ref="contentRef"
           class="movie-details-panel"
       >
-        <div class="row g-4 align-items-center">
+        <div class="row g-4 mb-5">
           <div class="col-12 col-lg-4">
             <div class="poster-wrap">
               <img
@@ -215,6 +432,94 @@ function goBack() {
             </div>
           </div>
         </div>
+
+        <div class="widescreen-player-wrapper">
+          <div class="video-container">
+            
+            <video 
+              v-if="isPlaying"
+              ref="videoPlayerRef"
+              controls 
+              autoplay 
+              class="stream-player-active" 
+              @waiting="onVideoWaiting"
+              @playing="onVideoPlaying"
+              @canplay="onVideoPlaying"
+            >
+              Your browser does not support HTML5 video playback.
+            </video>
+
+            <div 
+              v-if="isPlaying && isVideoBuffering" 
+              class="video-buffering-overlay"
+            >
+              <div class="buffering-spinner-box">
+                <div class="spinner-border custom-spinner-glow mb-3" role="status"></div>
+                <p class="buffering-text">Buffering Stream...</p>
+              </div>
+            </div>
+
+            <div 
+              v-else-if="!isPlaying"
+              class="player-poster-overlay-active"
+              :style="movie.thumbnail ? { backgroundImage: `url(${movie.thumbnail})` } : {}"
+            >
+              <div class="backdrop-blur-filter"></div>
+              <button 
+                class="central-play-btn"
+                :disabled="loadingStream"
+                @click="startStreaming"
+              >
+                <span v-if="loadingStream" class="spinner-border spinner-purple" role="status"></span>
+                <span v-else class="play-arrow"></span>
+              </button>
+              <p class="overlay-play-text mt-3">
+                {{ loadingStream ? 'Loading Player...' : 'Click to Stream' }}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <div v-if="isPlaying" class="track-selectors-panel mt-3">
+          <div class="row g-3">
+            <div class="col-12 col-md-6" v-if="audioTracks.length > 1">
+              <label class="track-select-label">Audio Language</label>
+              <select 
+                class="form-select track-dropdown" 
+                v-model="selectedAudioIndex" 
+                @change="onTrackChange"
+              >
+                <option 
+                  v-for="track in audioTracks" 
+                  :key="track.index" 
+                  :value="track.index"
+                >
+                  {{ track.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="track-select-label">Subtitles</label>
+              <select 
+                class="form-select track-dropdown" 
+                v-model="selectedSubtitleIndex" 
+                @change="onTrackChange"
+              >
+                <option :value="null">Off</option>
+                <option 
+                  v-for="track in subtitleTracks" 
+                  :key="track.index" 
+                  :value="track.index"
+                >
+                  {{ track.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -256,12 +561,154 @@ function goBack() {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 28px;
   backdrop-filter: blur(14px);
-  padding: 1.5rem;
+  padding: 2rem;
   box-shadow:
       0 20px 60px rgba(0, 0, 0, 0.45),
       0 0 40px rgba(139, 92, 246, 0.12);
 }
 
+/* Widescreen Video Player Wrapper */
+.widescreen-player-wrapper {
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 
+    0 15px 45px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #000;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.stream-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* High Contrast Buffering Overlay */
+.video-buffering-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 3, 10, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15; /* Sits directly above the video player elements */
+  pointer-events: none; /* Allows click events to pass down to native controls */
+}
+
+.buffering-spinner-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-spinner-glow {
+  width: 4rem;
+  height: 4rem;
+  border-width: 0.35em;
+  color: #a78bfa !important; /* Vivid Light Purple */
+  filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.75)); /* Soft High Contrast Outer Glow */
+  animation: spinner-border .75s linear infinite;
+}
+
+.buffering-text {
+  color: #f5f3ff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 10px;
+  text-shadow: 0 0 8px rgba(167, 139, 250, 0.5), 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* Blurred pre-play styling */
+.player-poster-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  pointer-events: auto;
+}
+
+.backdrop-blur-filter {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 8, 24, 0.55);
+  backdrop-filter: blur(15px);
+  z-index: 1;
+}
+
+.central-play-btn {
+  position: relative;
+  z-index: 2;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  border: none;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
+}
+
+.central-play-btn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 35px rgba(139, 92, 246, 0.85);
+}
+
+.central-play-btn:disabled {
+  background: rgba(45, 30, 80, 0.9);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Custom Purple Loading Spinner */
+.spinner-purple {
+  color: #c4b5fd !important;
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+}
+
+/* Minimalist CSS Play Arrow */
+.play-arrow {
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  border-left: 24px solid #fff;
+  margin-left: 6px;
+}
+
+.overlay-play-text {
+  position: relative;
+  z-index: 2;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Static Poster Styles */
 .poster-wrap {
   position: relative;
   overflow: hidden;
@@ -423,5 +870,78 @@ function goBack() {
   border-radius: 24px;
   padding: 3rem 1rem;
   backdrop-filter: blur(12px);
+}
+
+/* Ensure the active video player dominates the cursor layers */
+.stream-player-active {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 10; /* Force it on top of everything else */
+  pointer-events: auto !important; /* Ensure controls are fully responsive */
+}
+
+/* Clearer separation of the overlay state */
+.player-poster-overlay-active {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  z-index: 5;
+}
+
+.backdrop-blur-filter {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 8, 24, 0.55);
+  backdrop-filter: blur(15px);
+  z-index: 1;
+}
+
+.track-selectors-panel {
+  background: rgba(20, 14, 35, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.track-select-label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c4b5fd;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.track-dropdown {
+  background-color: rgba(12, 8, 24, 0.9) !important;
+  border: 1px solid rgba(196, 181, 253, 0.25) !important;
+  color: #f5f3ff !important;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.track-dropdown:focus {
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.25) !important;
+  outline: none;
+}
+
+.track-dropdown option {
+  background-color: #0c0818;
+  color: #fff;
 }
 </style>

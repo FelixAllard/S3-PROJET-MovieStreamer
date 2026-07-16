@@ -8,6 +8,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
@@ -121,5 +122,29 @@ public class MoviePresentation {
     ) {
         List<Movie> movies = movieBusiness.searchMovies(tags, yearMin, yearMax, language, director, studio, writer, title);
         return Response.ok(movies).build();
+    }
+
+    @GET
+    @Path("/{id}/stream")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PermitAll
+    public Response getStream(
+            @PathParam("id") long id,
+            @QueryParam("playSessionId") String playSessionId,
+            @QueryParam("mediaSourceId") String mediaSourceId,
+            @QueryParam("audioStreamIndex") Integer audioStreamIndex,
+            @QueryParam("subtitleStreamIndex") Integer subtitleStreamIndex
+    ) {
+        Map<String, String> result = movieBusiness.getStreamUrl(id, audioStreamIndex, subtitleStreamIndex, playSessionId, mediaSourceId);
+        return Response.ok(result).build();
+    }
+
+    @GET
+    @Path("/{id}/playback-info")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PermitAll
+    public Response getPlaybackInfo(@PathParam("id") long id) {
+        String jsonString = movieBusiness.getPlaybackInfo(id);
+        return Response.ok(jsonString).build();
     }
 }

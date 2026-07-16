@@ -13,7 +13,8 @@ export class Movie {
                     director,
                     writer,
                     studio,
-                    language
+                    language,
+                    streamId
                 } = {}) {
         this.id = id
         this.title = title
@@ -26,5 +27,6 @@ export class Movie {
         this.writer = writer
         this.studio = studio
         this.language = language
+        this.streamId = streamId || '';
     }
 }
