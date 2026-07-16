@@ -204,6 +204,10 @@ function onLeave(index) {
 }
 
 // ── Admin actions ──────────────────────────────────────────
+function navigateToCreate() {
+  router.push('/movies/create')
+}
+
 function editMovie(movie, event) {
   event.stopPropagation()
   router.push(`/movies/${movie.id}/edit`)
@@ -343,7 +347,12 @@ function clearAdvancedSearch() {
 
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 position-relative z-2">
               <h1 class="section-title display-6 fw-bold mb-0">Movies</h1>
-              <span class="movie-count">{{ movieCountLabel }}</span>
+              <div class="d-flex align-items-center gap-3">
+                <span class="movie-count">{{ movieCountLabel }}</span>
+                <button v-if="isAdmin" class="btn add-movie-btn" @click="navigateToCreate">
+                  ＋ Add Movie
+                </button>
+              </div>
             </div>
 
             <div v-if="loading" class="text-white text-center py-5 position-relative z-2">
@@ -968,6 +977,25 @@ function clearAdvancedSearch() {
 
 .movie-card.is-transitioning::after { opacity: 1; animation: pixelFlash 0.25s ease-out forwards; }
 .movie-card.is-transitioning .image { image-rendering: pixelated; }
+
+.add-movie-btn {
+  background: linear-gradient(90deg, #5b21b6, #7c3aed, #9333ea);
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 6px 18px rgba(91, 33, 182, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.add-movie-btn:hover {
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(91, 33, 182, 0.45);
+}
+
 
 @keyframes shinePass {
   0% { transform: translateX(-140%); }

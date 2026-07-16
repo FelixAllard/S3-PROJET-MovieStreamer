@@ -9,7 +9,8 @@ import SignUp from '../views/SignUp.vue';
 import SingleUser from '../views/SingleUser.vue';
 import WatchList from '../views/WatchList.vue';
 import EditSingleMovie from '../views/EditMoviePage.vue';
-
+import CreateMovie from '../views/CreateMoviePage.vue';
+import EditTagsPage from "../views/EditTagsPage.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -54,6 +55,17 @@ const router = createRouter({
             path:'/movies/:id/edit',
             component: EditSingleMovie,
             meta: { requiresAdmin: true }
+        },
+        {
+            path:'/movies/create',
+            component: CreateMovie,
+            meta: { requiresAdmin: true }
+        },
+        {
+            path : '/tags',
+            component: EditTagsPage,
+            meta: { requiresAuth: true }
+
         }
 
         /*,

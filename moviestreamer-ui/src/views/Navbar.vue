@@ -16,6 +16,7 @@ const navItems = computed(() => {
 
   if (isAdmin.value) {
     baseItems.push({ label: '🛡️ Admin Users', to: '/admin/users' })
+    baseItems.push({ label: '🏷️ Tag Management', to: '/tags' })
   }
 
   if (currentUsername.value) {
@@ -31,7 +32,7 @@ function navigateToMyProfile() {
 
 function parseTokenData() {
   const token = localStorage.getItem('token')
-  
+
   if (!token) {
     currentUsername.value = null
     isAdmin.value = false
@@ -43,7 +44,7 @@ function parseTokenData() {
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
     const payload = JSON.parse(jsonPayload)
-    
+
     currentUsername.value = payload.preferred_username || payload.name || 'User'
     isAdmin.value = payload.realm_access?.roles?.includes('admin') || false
   } catch (error) {
@@ -117,15 +118,15 @@ function handleLogout() {
               @mouseenter="hoveredItem = item.to"
               @mouseleave="hoveredItem = null"
           >
-          <template v-if="item.isUser">
-            <div class="d-flex align-items-center user-display-pill px-3 py-2">
-              <a href="#" @click.prevent="navigateToMyProfile" class="nav-link user-profile-link">
-                👤 {{ item.label }}
-              </a>
-              <span class="pill-separator mx-2">|</span>
-              <button @click="handleLogout" class="btn logout-text-btn">Logout</button>
-            </div>
-          </template>
+            <template v-if="item.isUser">
+              <div class="d-flex align-items-center user-display-pill px-3 py-2">
+                <a href="#" @click.prevent="navigateToMyProfile" class="nav-link user-profile-link">
+                  👤 {{ item.label }}
+                </a>
+                <span class="pill-separator mx-2">|</span>
+                <button @click="handleLogout" class="btn logout-text-btn">Logout</button>
+              </div>
+            </template>
 
             <template v-else>
               <RouterLink

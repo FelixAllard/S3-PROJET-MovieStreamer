@@ -116,8 +116,9 @@ async function saveMovie() {
       language: form.value.language,
       year: form.value.year ? Number(form.value.year) : null,
       movieLength: form.value.movieLength ? Number(form.value.movieLength) : null,
-      thumbnail: form.value.thumbnail
-      //, tags: form.value.tagIds.map(id => ({ id }))
+      thumbnail: form.value.thumbnail,
+      // Pass the actual tag objects (or at least objects with an ID)
+      tags: form.value.tagIds.map(id => ({ id: id }))
     }
 
     await apiClient.put(`/movie/${movieId.value}`, payload)

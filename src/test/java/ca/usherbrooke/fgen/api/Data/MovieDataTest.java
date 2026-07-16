@@ -20,12 +20,13 @@ public class MovieDataTest {
 
     private MovieRepository movieRepository;
     private MovieData movieData;
+    private TagRepository tagRepository;
 
     @BeforeEach
     void setUp() {
         movieRepository = Mockito.mock(MovieRepository.class);
-
-        movieData = new MovieData(movieRepository);
+        tagRepository = Mockito.mock(TagRepository.class);
+        movieData = new MovieData(movieRepository, tagRepository);
 
     }
 
