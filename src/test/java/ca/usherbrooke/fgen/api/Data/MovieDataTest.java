@@ -6,8 +6,10 @@ import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Entities.Tag;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.ws.rs.WebApplicationException;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -20,12 +22,13 @@ public class MovieDataTest {
 
     private MovieRepository movieRepository;
     private MovieData movieData;
+    private TagRepository tagRepository;
 
     @BeforeEach
     void setUp() {
         movieRepository = Mockito.mock(MovieRepository.class);
-
-        movieData = new MovieData(movieRepository);
+        tagRepository = Mockito.mock(TagRepository.class);
+        movieData = new MovieData(movieRepository, tagRepository);
 
     }
 
@@ -181,17 +184,24 @@ public class MovieDataTest {
         movie.language = "English";
         movie.thumbnail = "img.jpg";
 
-        // No duplicate title
         when(movieRepository.count("title", movie.title)).thenReturn(0L);
 
-        Movie result = movieData.postMovie(movie);
+        try (MockedStatic<Hibernate> hibernateMock = mockStatic(Hibernate.class)) {
+            // Hibernate.initialize() is a no-op in unit tests — just let it pass silently
+            hibernateMock.when(() -> Hibernate.initialize(any())).thenAnswer(inv -> null);
 
-        assertNotNull(result);
+            Movie result = movieData.postMovie(movie);
 
-        verify(movieRepository).persist(movie);
+            assertNotNull(result);
+            verify(movieRepository).persist(movie);
 
-        assertNull(movie.getTags());
-        assertNull(movie.getWatchedMovieUsers());
+            // postMovie sets tags to an empty managed list, never null
+            assertNotNull(movie.getTags());
+            assertTrue(movie.getTags().isEmpty());
+
+            // watchedMovieUsers is still explicitly nulled out
+            assertNull(movie.getWatchedMovieUsers());
+        }
     }
     @Test
     void shouldThrowExceptionWhenTitleAlreadyExists() {

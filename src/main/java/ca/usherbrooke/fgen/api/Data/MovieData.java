@@ -8,18 +8,23 @@ import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
 import jakarta.transaction.Transactional;
+import lombok.Builder;
+import org.hibernate.Hibernate;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
 public class MovieData {
     private final MovieRepository movieRepository;
+    private final TagRepository tagRepository;
 
-
-    public MovieData(MovieRepository movieRepository) {
+    public MovieData(MovieRepository movieRepository, TagRepository tagRepository) {
         this.movieRepository = movieRepository;
+        this.tagRepository = tagRepository;
 
     }
 
@@ -57,15 +62,28 @@ public class MovieData {
         return movieRepository.findNewestMovies(number);
     }
     @Transactional
-    public Movie postMovie(Movie movie){
-        if (movieRepository.count("title", movie.title) > 0)
-            ExceptionUtils.throwException(409, "title Name Already Exists");
+    public Movie postMovie(Movie movie) {
+        if (movieRepository.count("title", movie.title) > 0) {
+            ExceptionUtils.throwException(409, "Movie title already exists");
+        }
+
+        List<Tag> managedTags = new ArrayList<>();
+
+        if (movie.getTags() != null) {
+            managedTags = movie.getTags().stream()
+                    .map(tag -> tagRepository.findById(tag.id))
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+        }
 
         movie.setId(null);
-        movie.setTags(null);
+        movie.setTags(managedTags);
         movie.setWatchedMovieUsers(null);
 
         movieRepository.persist(movie);
+
+        Hibernate.initialize(movie.getTags());
+
         return movie;
     }
     public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
@@ -87,6 +105,21 @@ public class MovieData {
         movie.setWriter(updatedMovie.writer == null ? "" : updatedMovie.writer);
         movie.setStudio(updatedMovie.studio == null ? "" : updatedMovie.studio);
         movie.setLanguage(updatedMovie.language == null ? "" : updatedMovie.language);
+
+
+        Hibernate.initialize(movie.getWatchedMovieUsers()); // Add this line
+        // Resolve managed Tag entities from DB before associating
+        if (updatedMovie.getTags() != null) {
+            List<Tag> managedTags = updatedMovie.getTags().stream()
+                    .map(t -> tagRepository.findById( t.id))
+                    .filter(t -> t != null)
+                    .collect(java.util.stream.Collectors.toList());
+
+            movie.getTags().clear();
+            movie.getTags().addAll(managedTags);
+        }
+
+        Hibernate.initialize(movie.getTags());
 
         return movie;
     }
