@@ -102,10 +102,25 @@ public class UserPresentation {
     }
 
     @PUT
+    @Path("{id}/enable")
+    @RolesAllowed({"admin"})
+    public Response enableUser(@PathParam("id") long id) {
+        userBusiness.enableUser(id);
+
+        return Response.ok()
+                .entity("{\"message\":\"User enabled\"}")
+                .build();
+    }
+
+
+    @PUT
     @Path("{id}/disable")
     @RolesAllowed({"admin"})
     public Response disableUser(@PathParam("id") long id) {
         userBusiness.disableUser(id);
-        return Response.ok().build();
+
+        return Response.ok()
+                .entity("{\"message\":\"User disabled\"}")
+                .build();
     }
 }

@@ -41,9 +41,10 @@ public class UserBusiness {
                             .build()
             );
         }
-        User users = userData.getUserByUserId(id);
 
-        if(users == null){
+        User user = userService.getUserByIdWithStatus(id);
+
+        if(user == null){
             throw new WebApplicationException(
                     Response.status(404)
                             .entity("User not found")
@@ -51,14 +52,22 @@ public class UserBusiness {
                             .build()
             );
         }
-        return users;
+
+        return user;
     }
 
     public void disableUser(long id) {
         if (id <= 0) {
             ExceptionUtils.throwException(400, "Invalid user ID provided.");
         }
-        userService.disableUser(id);
+        userService.disableOrDisableUser(id, false);
+    }
+
+    public void enableUser(long id) {
+        if (id <= 0) {
+            ExceptionUtils.throwException(400, "Invalid user ID provided.");
+        }
+        userService.disableOrDisableUser(id, true);
     }
 
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating) {
