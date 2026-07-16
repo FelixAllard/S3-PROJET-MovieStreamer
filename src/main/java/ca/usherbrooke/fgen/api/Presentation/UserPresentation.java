@@ -108,4 +108,12 @@ public class UserPresentation {
         userBusiness.disableUser(id);
         return Response.ok().build();
     }
+
+    @PUT
+    @Path("{id}/enable")
+    @RolesAllowed({"admin"})
+    public Response enableUser(@PathParam("id") long id) {
+        userBusiness.enableUser(id);
+        return Response.ok().build();
+    }
 }

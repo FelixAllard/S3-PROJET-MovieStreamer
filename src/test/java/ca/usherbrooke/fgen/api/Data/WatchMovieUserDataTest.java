@@ -1,10 +1,8 @@
 package ca.usherbrooke.fgen.api.Data;
 
+import ca.usherbrooke.fgen.api.DAO.MovieRepository;
 import ca.usherbrooke.fgen.api.DAO.WatchMovieUserRepository;
-import ca.usherbrooke.fgen.api.Entities.Movie;
-import ca.usherbrooke.fgen.api.Entities.MovieStatus;
-import ca.usherbrooke.fgen.api.Entities.User;
-import ca.usherbrooke.fgen.api.Entities.WatchMovieUser;
+import ca.usherbrooke.fgen.api.Entities.*;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,12 +17,14 @@ import static org.mockito.Mockito.*;
 public class WatchMovieUserDataTest {
 
     private WatchMovieUserRepository watchMovieUserRepository;
+    private MovieRepository movieRepository;
     private WatchMovieUserData watchMovieUserData;
 
     @BeforeEach
     void setUp() {
         watchMovieUserRepository = Mockito.mock(WatchMovieUserRepository.class);
-        watchMovieUserData = new WatchMovieUserData(watchMovieUserRepository);
+        movieRepository = Mockito.mock(MovieRepository.class);
+        watchMovieUserData = new WatchMovieUserData(watchMovieUserRepository, movieRepository);
     }
 
 
@@ -178,4 +178,71 @@ public class WatchMovieUserDataTest {
         assertTrue(result.isSaved());
         verify(watchMovieUserRepository, times(1)).persist(result);
     }
+
+    @Test
+    void getUserMovieRecommendationByUserId_retourneListeVide_siAucunFilmSauvegarde() {
+        long userId = 1L;
+
+        when(watchMovieUserRepository.list("user.id = ?1 and saved = true", userId))
+                .thenReturn(List.of());
+
+        List<Movie> result = watchMovieUserData.getUserMovieRecommendationByUserId(userId);
+
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(movieRepository);
+    }
+
+    @Test
+    void getUserMovieRecommendationByUserId_retourneListeVide_siAucunTagPreferre() {
+        long userId = 1L;
+
+        Movie savedMovie = new Movie();
+        savedMovie.setId(1L);
+        savedMovie.setTags(List.of());
+
+        WatchMovieUser interaction = new WatchMovieUser();
+        interaction.setMovie(savedMovie);
+
+        when(watchMovieUserRepository.list("user.id = ?1 and saved = true", userId))
+                .thenReturn(List.of(interaction));
+
+        List<Movie> result = watchMovieUserData.getUserMovieRecommendationByUserId(userId);
+
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(movieRepository);
+    }
+
+    @Test
+    void getUserMovieRecommendationByUserId_retourneFilmsPartageantUnTagEtExcluLesDejaSauvegardes() {
+        long userId = 1L;
+
+        Tag actionTag = new Tag();
+        actionTag.setId(100);
+
+        Movie savedMovie = new Movie();
+        savedMovie.setId(1L);
+        savedMovie.setTags(List.of(actionTag));
+
+        WatchMovieUser interaction = new WatchMovieUser();
+        interaction.setMovie(savedMovie);
+
+        Movie matchingMovie = new Movie();
+        matchingMovie.setId(2L);
+        matchingMovie.setTags(List.of(actionTag));
+
+        Movie nonMatchingMovie = new Movie();
+        nonMatchingMovie.setId(3L);
+        nonMatchingMovie.setTags(List.of());
+
+        when(watchMovieUserRepository.list("user.id = ?1 and saved = true", userId))
+                .thenReturn(List.of(interaction));
+        when(movieRepository.listAll())
+                .thenReturn(List.of(savedMovie, matchingMovie, nonMatchingMovie));
+
+        List<Movie> result = watchMovieUserData.getUserMovieRecommendationByUserId(userId);
+
+        assertEquals(List.of(matchingMovie), result);
+        verify(movieRepository, times(1)).listAll();
+    }
 }
+

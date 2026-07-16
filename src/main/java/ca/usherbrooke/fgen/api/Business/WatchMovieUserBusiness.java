@@ -101,4 +101,9 @@ public class WatchMovieUserBusiness {
         return movieBusiness.getMovieByMovieId(movieId);
     }
 
+    public List <Movie> getUserMovieRecommendationByUserId(long userId){
+        validateUserExists(userId);
+        return watchMovieUserData.getUserMovieRecommendationByUserId(userId);
+    }
+
 }

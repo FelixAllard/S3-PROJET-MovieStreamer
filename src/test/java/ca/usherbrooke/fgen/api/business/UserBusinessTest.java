@@ -74,11 +74,11 @@ public class UserBusinessTest {
 
     @Test
     void disableUser_appelleServiceAvecIdValide() {
-        doNothing().when(userService).disableUser(1L);
+        doNothing().when(userService).setUserEnabledStatus(1L, false);
 
         userBusiness.disableUser(1L);
 
-        verify(userService, times(1)).disableUser(1L);
+        verify(userService, times(1)).setUserEnabledStatus(1L, false);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class UserBusinessTest {
                 () -> userBusiness.disableUser(0L));
 
         assertEquals(400, ex.getResponse().getStatus());
-        verify(userService, never()).disableUser(anyLong());
+        verify(userService, never()).setUserEnabledStatus(anyLong(), anyBoolean());
     }
 
     @Test
@@ -96,7 +96,34 @@ public class UserBusinessTest {
                 () -> userBusiness.disableUser(-5L));
 
         assertEquals(400, ex.getResponse().getStatus());
-        verify(userService, never()).disableUser(anyLong());
+        verify(userService, never()).setUserEnabledStatus(anyLong(), anyBoolean());
+    }
+
+    @Test
+    void enableUser_appelleServiceAvecIdValide() {
+        doNothing().when(userService).setUserEnabledStatus(1L, true);
+
+        userBusiness.enableUser(1L);
+
+        verify(userService, times(1)).setUserEnabledStatus(1L, true);
+    }
+
+    @Test
+    void enableUser_lanceExceptionSiIdInvalide() {
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.enableUser(0L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userService, never()).setUserEnabledStatus(anyLong(), anyBoolean());
+    }
+
+    @Test
+    void enableUser_lanceExceptionSiIdNegatif() {
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userBusiness.enableUser(-5L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userService, never()).setUserEnabledStatus(anyLong(), anyBoolean());
     }
 
     @Test

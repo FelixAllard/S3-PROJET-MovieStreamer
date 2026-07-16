@@ -86,7 +86,7 @@ public class UserDataTest {
     }
 
     @Test
-    void disableUser_desactiveUtilisateurDansKeycloak() {
+    void setUserEnabledStatus_desactiveUtilisateurDansKeycloak() {
         User user = new User();
         user.setKeycloakId("keycloak-uuid-123");
 
@@ -99,25 +99,45 @@ public class UserDataTest {
         when(userResource.toRepresentation()).thenReturn(keycloakUser);
         doNothing().when(userResource).update(keycloakUser);
 
-        userService.disableUser(1L);
+        userService.setUserEnabledStatus(1L, false);
 
         assertFalse(keycloakUser.isEnabled());
         verify(userResource, times(1)).update(keycloakUser);
     }
 
     @Test
-    void disableUser_lanceExceptionSiUserInexistant() {
+    void setUserEnabledStatus_activeUtilisateurDansKeycloak() {
+        User user = new User();
+        user.setKeycloakId("keycloak-uuid-123");
+
+        UserResource userResource = mock(UserResource.class);
+        UserRepresentation keycloakUser = new UserRepresentation();
+        keycloakUser.setEnabled(false);
+
+        when(userRepository.findById(1L)).thenReturn(user);
+        when(keycloak.realm("usager").users().get("keycloak-uuid-123")).thenReturn(userResource);
+        when(userResource.toRepresentation()).thenReturn(keycloakUser);
+        doNothing().when(userResource).update(keycloakUser);
+
+        userService.setUserEnabledStatus(1L, true);
+
+        assertTrue(keycloakUser.isEnabled());
+        verify(userResource, times(1)).update(keycloakUser);
+    }
+
+    @Test
+    void setUserEnabledStatus_lanceExceptionSiUserInexistant() {
         when(userRepository.findById(99L)).thenReturn(null);
 
         WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userService.disableUser(99L));
+                () -> userService.setUserEnabledStatus(99L, false));
 
         assertEquals(404, ex.getResponse().getStatus());
         verify(keycloak, never()).realm(anyString());
     }
 
     @Test
-    void disableUser_lanceExceptionSiKeycloakEchoue() {
+    void setUserEnabledStatus_lanceExceptionSiKeycloakEchoue() {
         User user = new User();
         user.setKeycloakId("keycloak-uuid-123");
 
@@ -126,10 +146,11 @@ public class UserDataTest {
                 .thenThrow(new RuntimeException("Keycloak down"));
 
         WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userService.disableUser(1L));
+                () -> userService.setUserEnabledStatus(1L, false));
 
         assertEquals(500, ex.getResponse().getStatus());
     }
+
     
     void updateUserRatingByUserId_Positive()
     {

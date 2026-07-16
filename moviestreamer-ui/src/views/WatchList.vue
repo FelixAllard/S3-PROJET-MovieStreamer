@@ -12,10 +12,12 @@ import { resolveDbUserId } from '/src/utils/auth.js'
 const router = useRouter()
 
 const movies = ref([])
+const recommendations = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 const pageRef = ref(null)
 const cardRefs = ref([])
+const recCardRefs = ref([])
 
 onMounted(async () => {
   await fetchWatchlist()
@@ -40,13 +42,26 @@ async function fetchWatchlist() {
       return
     }
 
-    const data = await apiClient.get(`/watch-history/saved/${userId}/movies`)
-    movies.value = Array.isArray(data) ? data.map(movie => new Movie(movie)) : []
+    const [savedData, recommendedData] = await Promise.all([
+      apiClient.get(`/watch-history/saved/${userId}/movies`),
+      apiClient.get(`/watch-history/recommendations/${userId}`)
+    ])
+
+    movies.value = Array.isArray(savedData) ? savedData.map(movie => new Movie(movie)) : []
+    recommendations.value = Array.isArray(recommendedData) ? recommendedData.map(movie => new Movie(movie)) : []
 
     await nextTick()
     cardRefs.value.forEach((card, index) => {
       if (!card) return
+      animate(
+          card,
+          { opacity: [0, 1], y: [24, 0] },
+          { duration: 0.35, delay: index * 0.04, easing: 'ease-out' }
+      )
+    })
 
+    recCardRefs.value.forEach((card, index) => {
+      if (!card) return
       animate(
           card,
           { opacity: [0, 1], y: [24, 0] },
@@ -84,36 +99,71 @@ function openMovie(movie) {
         <p class="mb-0">{{ errorMessage }}</p>
       </div>
 
-      <div v-else-if="movies.length === 0" class="state-box text-center">
-        <h2 class="mb-2">Your watchlist is empty</h2>
-        <p class="mb-4">Save a movie from its detail page to see it here.</p>
-        <button class="btn browse-btn" @click="router.push('/movies')">
-          Browse Movies
-        </button>
-      </div>
-
-      <div v-else class="row g-4">
-        <div
-            v-for="(movie, index) in movies"
-            :key="movie.id"
-            class="col-6 col-sm-4 col-lg-3"
-        >
-          <button
-              :ref="el => cardRefs[index] = el"
-              class="watchlist-card"
-              @click="openMovie(movie)"
-          >
-            <img
-                :src="movie.thumbnail"
-                :alt="movie.title"
-                class="poster"
-            />
-            <span class="card-overlay"></span>
-            <span class="card-copy">
-              <span class="movie-title">{{ movie.title }}</span>
-              <span class="movie-meta">{{ movie.year || 'Unknown year' }}</span>
-            </span>
+      <div v-else>
+        <div v-if="movies.length === 0" class="state-box text-center">
+          <h2 class="mb-2">Your watchlist is empty</h2>
+          <p class="mb-4">Save a movie from its detail page to see it here.</p>
+          <button class="btn browse-btn" @click="router.push('/movies')">
+            Browse Movies
           </button>
+        </div>
+
+        <div v-else class="row g-4">
+          <div
+              v-for="(movie, index) in movies"
+              :key="movie.id"
+              class="col-6 col-sm-4 col-lg-3"
+          >
+            <button
+                :ref="el => cardRefs[index] = el"
+                class="watchlist-card"
+                @click="openMovie(movie)"
+            >
+              <img
+                  :src="movie.thumbnail"
+                  :alt="movie.title"
+                  class="poster"
+              />
+              <span class="card-overlay"></span>
+              <span class="card-copy">
+                <span class="movie-title">{{ movie.title }}</span>
+                <span class="movie-meta">{{ movie.year || 'Unknown year' }}</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="recommendations.length > 0" class="recommendations-section mt-5">
+          <div class="watchlist-header mb-4">
+            <p class="eyebrow mb-2">Just For You</p>
+            <h2 class="watchlist-heading recommendations-heading mb-2">Recommended</h2>
+            <p class="watchlist-subtitle mb-0">Based on movies you've saved.</p>
+          </div>
+
+          <div class="row g-4">
+            <div
+                v-for="(movie, index) in recommendations"
+                :key="movie.id"
+                class="col-6 col-sm-4 col-lg-3"
+            >
+              <button
+                  :ref="el => recCardRefs[index] = el"
+                  class="watchlist-card"
+                  @click="openMovie(movie)"
+              >
+                <img
+                    :src="movie.thumbnail"
+                    :alt="movie.title"
+                    class="poster"
+                />
+                <span class="card-overlay"></span>
+                <span class="card-copy">
+                  <span class="movie-title">{{ movie.title }}</span>
+                  <span class="movie-meta">{{ movie.year || 'Unknown year' }}</span>
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -145,6 +195,15 @@ function openMovie(movie) {
   font-size: clamp(2.2rem, 4vw, 4rem);
   font-weight: 800;
   line-height: 1;
+}
+
+.recommendations-heading {
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+}
+
+.recommendations-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 2.5rem;
 }
 
 .watchlist-subtitle,

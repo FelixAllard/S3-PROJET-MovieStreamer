@@ -126,7 +126,6 @@ public class UserPresentationTest {
         assertEquals(200, response.getStatus());
         verify(userBusiness, times(1)).updateUserRatingByUserId(1L, 2L, 3);
     }
-
     @Test
     void disableUser_retourneStatus200SiSucces() {
         doNothing().when(userBusiness).disableUser(1L);
@@ -174,6 +173,55 @@ public class UserPresentationTest {
 
         assertEquals(500, ex.getResponse().getStatus());
         verify(userBusiness, times(1)).disableUser(1L);
+    }
+
+    @Test
+    void enableUser_retourneStatus200SiSucces() {
+        doNothing().when(userBusiness).enableUser(1L);
+
+        Response response = userPresentation.enableUser(1L);
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        verify(userBusiness, times(1)).enableUser(1L);
+    }
+
+    @Test
+    void enableUser_retourneStatus400SiIdInvalide() {
+        doThrow(new WebApplicationException(
+                Response.status(400).entity("Invalid user ID provided.").build()
+        )).when(userBusiness).enableUser(0L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.enableUser(0L));
+
+        assertEquals(400, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).enableUser(0L);
+    }
+
+    @Test
+    void enableUser_retourneStatus404SiUserInexistant() {
+        doThrow(new WebApplicationException(
+                Response.status(404).entity("User not found in database.").build()
+        )).when(userBusiness).enableUser(99L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.enableUser(99L));
+
+        assertEquals(404, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).enableUser(99L);
+    }
+
+    @Test
+    void enableUser_retourneStatus500SiKeycloakEchoue() {
+        doThrow(new WebApplicationException(
+                Response.status(500).entity("Failed to enable user in Keycloak.").build()
+        )).when(userBusiness).enableUser(1L);
+
+        WebApplicationException ex = assertThrows(WebApplicationException.class,
+                () -> userPresentation.enableUser(1L));
+
+        assertEquals(500, ex.getResponse().getStatus());
+        verify(userBusiness, times(1)).enableUser(1L);
     }
 
     @Test

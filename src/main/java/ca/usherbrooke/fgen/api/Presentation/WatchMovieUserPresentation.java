@@ -111,4 +111,13 @@ public class WatchMovieUserPresentation {
         Integer rating = watchMovieUserBusiness.getUserRatingByUserIdAndMovieId(userId, movieId);
         return Response.ok(rating).build();
     }
+
+    @GET
+    @Path("recommendations/{userId}")
+    @RolesAllowed({"user", "admin"})
+    public Response getUserMovieRecommendationByUserId(@PathParam("userId") long userId) {
+        SecurityUtils.verifyOwnershipOrAdmin(userId, userBusiness, jwt, securityContext);
+        List<Movie> recommendations = watchMovieUserBusiness.getUserMovieRecommendationByUserId(userId);
+        return Response.ok(recommendations).build();
+    }
 }

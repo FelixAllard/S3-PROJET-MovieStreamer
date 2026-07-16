@@ -56,8 +56,14 @@ class ApiClient {
             return null
         }
 
+        const text = await response.text()
+
+        if (!text) {
+            return null
+        }
+
         try {
-            return await response.json()
+            return JSON.parse(text)
         } catch (parseError) {
             console.error(`[API] Failed to parse JSON response from ${url}:`, parseError.message)
             throw parseError

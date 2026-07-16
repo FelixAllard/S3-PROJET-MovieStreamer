@@ -40,8 +40,6 @@ public class UserData {
         return userRepository.findById(id);
     }
 
-
-
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating){
         User user = userRepository.findById(userId);
 
@@ -70,4 +68,5 @@ public class UserData {
 
         return watchMovieUser;
     }
+
 }

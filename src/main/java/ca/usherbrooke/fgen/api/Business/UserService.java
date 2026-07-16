@@ -6,6 +6,7 @@ import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.keycloak.admin.client.Keycloak;
@@ -90,32 +91,48 @@ public class UserService {
         return localUser;
     }
     @Transactional
-    public void disableUser(long userId) {
-        // 1. Find the user locally to get their Keycloak UUID string
+    public void setUserEnabledStatus(long userId, boolean enabled) {
         User user = userRepository.findById(userId);
         if (user == null) {
             ExceptionUtils.throwException(404, "User not found in database.");
         }
 
+        String realmName = "usager";
+
         try {
-            String realmName = "usager";
-            // 2. Fetch the current Keycloak representation
+            // Empêche de désactiver un compte admin
+            if (!enabled) {
+                boolean isAdmin = keycloak.realm(realmName)
+                        .users()
+                        .get(user.getKeycloakId())
+                        .roles()
+                        .realmLevel()
+                        .listEffective()
+                        .stream()
+                        .anyMatch(role -> role.getName().equalsIgnoreCase("admin"));
+
+                if (isAdmin) {
+                    ExceptionUtils.throwException(403, "Cannot disable an administrator account.");
+                }
+            }
+
             UserRepresentation keycloakUser = keycloak.realm(realmName)
                     .users()
                     .get(user.getKeycloakId())
                     .toRepresentation();
 
-            // 3. Flip the flag to false
-            keycloakUser.setEnabled(false);
+            keycloakUser.setEnabled(enabled);
 
-            // 4. Push the update back to Keycloak
             keycloak.realm(realmName)
                     .users()
                     .get(user.getKeycloakId())
                     .update(keycloakUser);
 
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
-            ExceptionUtils.throwException(500, "Failed to disable user in Keycloak: " + e.getMessage());
+            String action = enabled ? "enable" : "disable";
+            ExceptionUtils.throwException(500, "Failed to " + action + " user in Keycloak: " + e.getMessage());
         }
     }
 

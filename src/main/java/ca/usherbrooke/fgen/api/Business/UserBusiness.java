@@ -58,7 +58,14 @@ public class UserBusiness {
         if (id <= 0) {
             ExceptionUtils.throwException(400, "Invalid user ID provided.");
         }
-        userService.disableUser(id);
+        userService.setUserEnabledStatus(id, false);
+    }
+
+    public void enableUser(long id) {
+        if (id <= 0) {
+            ExceptionUtils.throwException(400, "Invalid user ID provided.");
+        }
+        userService.setUserEnabledStatus(id, true);
     }
 
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating) {
