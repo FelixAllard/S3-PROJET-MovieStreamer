@@ -242,4 +242,35 @@ public class MovieDataTest {
         assertThrows(WebApplicationException.class,
                 () -> movieData.updateMovieByMovieId(99, new Movie()));
     }
+
+    @Test
+    void searchMovies_delegueAuRepositoryEtRetourneListe() {
+        // Arrange
+        List<Integer> tags = List.of(1, 2);
+        List<Movie> movies = List.of(new Movie(), new Movie());
+
+        when(movieRepository.searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter"))
+                .thenReturn(movies);
+
+        // Act
+        List<Movie> result = movieData.searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter");
+
+        // Assert
+        assertEquals(2, result.size());
+        verify(movieRepository, times(1)).searchMovies(tags, 2000, 2020, "English", "Nolan", "WB", "Nolan", "Inter");
+    }
+
+    @Test
+    void searchMovies_retourneListeVideSiAucunFilmTrouve() {
+        // Arrange
+        when(movieRepository.searchMovies(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(List.of());
+
+        // Act
+        List<Movie> result = movieData.searchMovies(null, null, null, null, null, null, null, null);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
 }

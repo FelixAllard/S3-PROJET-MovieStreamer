@@ -31,7 +31,7 @@ const transitioningCard = ref(null)
 
 onMounted(async () => {
   await fetchAllMovies()
-
+  await fetchAllTags()
   animate(
       bgRef.value,
       { backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] },
@@ -300,6 +300,99 @@ function onLeave(index) {
       { duration: 0.25, easing: 'ease-out' }
   )
 }
+
+// Advanced search
+const showAdvancedSearch = ref(false)
+const advancedFilters = ref({
+  tags: [],
+  yearMin: '',
+  yearMax: '',
+  language: '',
+  director: '',
+  studio: '',
+  writer: '',
+  title: ''
+})
+
+// Récupérer tous les tags disponibles
+const allTags = ref([])
+
+
+
+async function fetchAllTags() {
+  try {
+    const data = await apiClient.get('/tag/all')
+    allTags.value = Array.isArray(data) ? data : []
+  } catch (err) {
+    console.error('Failed to fetch tags:', err)
+  }
+}
+
+function toggleTag(tag) {
+  const index = advancedFilters.value.tags.findIndex(t => t.id === tag.id)
+  if (index === -1) {
+    advancedFilters.value.tags.push(tag)
+  } else {
+    advancedFilters.value.tags.splice(index, 1)
+  }
+}
+
+function isTagSelected(tag) {
+  return advancedFilters.value.tags.some(t => t.id === tag.id)
+}
+
+async function applyAdvancedSearch() {
+  try {
+    loading.value = true
+    errorMessage.value = ''
+    isSearching.value = true
+
+    const params = new URLSearchParams()
+
+    if (advancedFilters.value.tags.length > 0)
+      advancedFilters.value.tags.forEach(t => params.append('tags', t.id))
+    if (advancedFilters.value.yearMin)
+      params.append('yearMin', advancedFilters.value.yearMin)
+    if (advancedFilters.value.yearMax)
+      params.append('yearMax', advancedFilters.value.yearMax)
+    if (advancedFilters.value.language)
+      params.append('language', advancedFilters.value.language)
+    if (advancedFilters.value.director)
+      params.append('director', advancedFilters.value.director)
+    if (advancedFilters.value.studio)
+      params.append('studio', advancedFilters.value.studio)
+    if (advancedFilters.value.writer)
+      params.append('writer', advancedFilters.value.writer)
+    if (advancedFilters.value.title)
+      params.append('title', advancedFilters.value.title)
+
+    const data = await apiClient.get(`/movie/search?${params.toString()}`)
+    movies.value = Array.isArray(data) ? data.map(m => new Movie(m)) : []
+
+    if (movies.value.length === 0)
+      errorMessage.value = 'No movies found for those filters.'
+
+  } catch (err) {
+    console.error('Advanced search failed:', err)
+    errorMessage.value = 'Search failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function clearAdvancedSearch() {
+  advancedFilters.value = {
+    tags: [],
+    yearMin: '',
+    yearMax: '',
+    language: '',
+    director: '',
+    studio: '',
+    writer: ''
+  }
+  movies.value = allMovies.value
+  isSearching.value = false
+}
 </script>
 
 <template>
@@ -418,6 +511,119 @@ function onLeave(index) {
               >
                 Clear Search
               </button>
+
+              <!-- Bouton Advanced Search -->
+              <button
+                  class="btn advanced-search-btn mt-1"
+                  @click="showAdvancedSearch = !showAdvancedSearch"
+                  :disabled="loading"
+              >
+                {{ showAdvancedSearch ? 'Hide Advanced Search' : 'Advanced Search' }}
+              </button>
+
+              <!-- Panneau Advanced Search -->
+              <div v-if="showAdvancedSearch" class="advanced-panel mt-3 position-relative z-2">
+
+                <!-- Tags -->
+                <div class="mb-3">
+                  <label class="form-label text-white">Tags</label>
+                  <div class="tags-grid">
+            <span
+                v-for="tag in allTags"
+                :key="tag.id"
+                class="tag-filter"
+                :class="{ 'tag-selected': isTagSelected(tag) }"
+                @click="toggleTag(tag)"
+            >
+                {{ tag.name }}
+            </span>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label text-white">Title</label>
+                  <input
+                      v-model="advancedFilters.title"
+                      type="text"
+                      class="form-control search-input"
+                      placeholder="e.g. Inter"
+                  />
+                </div>
+
+                <!-- Année -->
+                <div class="mb-3">
+                  <label class="form-label text-white">Year</label>
+                  <div class="d-flex gap-2">
+                    <input
+                        v-model="advancedFilters.yearMin"
+                        type="number"
+                        class="form-control search-input"
+                        placeholder="From"
+                    />
+                    <input
+                        v-model="advancedFilters.yearMax"
+                        type="number"
+                        class="form-control search-input"
+                        placeholder="To"
+                    />
+                  </div>
+                </div>
+
+                <!-- Language -->
+                <div class="mb-3">
+                  <label class="form-label text-white">Language</label>
+                  <input
+                      v-model="advancedFilters.language"
+                      type="text"
+                      class="form-control search-input"
+                      placeholder="e.g. English"
+                  />
+                </div>
+
+                <!-- Director -->
+                <div class="mb-3">
+                  <label class="form-label text-white">Director</label>
+                  <input
+                      v-model="advancedFilters.director"
+                      type="text"
+                      class="form-control search-input"
+                      placeholder="e.g. Christopher Nolan"
+                  />
+                </div>
+
+                <!-- Studio -->
+                <div class="mb-3">
+                  <label class="form-label text-white">Studio</label>
+                  <input
+                      v-model="advancedFilters.studio"
+                      type="text"
+                      class="form-control search-input"
+                      placeholder="e.g. Warner Bros"
+                  />
+                </div>
+
+                <!-- Writer -->
+                <div class="mb-3">
+                  <label class="form-label text-white">Writer</label>
+                  <input
+                      v-model="advancedFilters.writer"
+                      type="text"
+                      class="form-control search-input"
+                      placeholder="e.g. Jonathan Nolan"
+                  />
+                </div>
+
+                <!-- Boutons -->
+                <div class="d-grid gap-2">
+                  <button class="btn movie-search-btn" @click="applyAdvancedSearch">
+                    <span class="btn-energy"></span>
+                    <span class="btn-label">Apply Filters</span>
+                  </button>
+                  <button class="btn btn-outline-light clear-btn" @click="clearAdvancedSearch">
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div v-if="searchQuery" class="search-hint mt-3 position-relative z-2">
@@ -787,4 +993,52 @@ function onLeave(index) {
   }
 }
 
+.advanced-search-btn {
+  border-radius: 14px;
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(139, 92, 246, 0.12);
+  transition: all 0.2s ease;
+}
+
+.advanced-search-btn:hover {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: rgba(139, 92, 246, 0.8);
+  color: white;
+}
+
+.advanced-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-filter {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tag-filter:hover {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.6);
+}
+
+.tag-selected {
+  background: rgba(139, 92, 246, 0.55);
+  border-color: rgba(139, 92, 246, 0.9);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.35);
+}
 </style>

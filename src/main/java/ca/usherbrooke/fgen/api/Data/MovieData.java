@@ -90,4 +90,10 @@ public class MovieData {
 
         return movie;
     }
+
+    public List<Movie> searchMovies(List<Integer> tags, Integer yearMin, Integer yearMax,
+                                    String language, String director, String studio,
+                                    String writer, String title) {
+        return movieRepository.searchMovies(tags, yearMin, yearMax, language, director, studio, writer, title);
+    }
 }
