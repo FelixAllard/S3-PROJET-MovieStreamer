@@ -7,11 +7,11 @@ import Footer from '/src/components/Footer.vue'
 
 <template>
   <Navbar />
+
   <CinemaShell contentMaxWidth="1200px">
     <template #left>
       <PixelField :columns="8" :rows="26" :intervalMs="140" :flipCount="5" />
     </template>
-
     <template #right>
       <PixelField :columns="8" :rows="26" :intervalMs="170" :flipCount="6" />
     </template>
@@ -20,7 +20,16 @@ import Footer from '/src/components/Footer.vue'
       <div class="container-fluid px-3 px-md-4 py-4">
         <router-view />
       </div>
-      <Footer />
     </div>
   </CinemaShell>
+
+  <Footer />
 </template>
+
+<style>
+{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+</style>
