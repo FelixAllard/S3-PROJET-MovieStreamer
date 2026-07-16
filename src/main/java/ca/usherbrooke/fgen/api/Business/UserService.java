@@ -90,7 +90,7 @@ public class UserService {
         return localUser;
     }
     @Transactional
-    public void disableUser(long userId) {
+    public void disableOrDisableUser(long userId, boolean state) {
         // 1. Find the user locally to get their Keycloak UUID string
         User user = userRepository.findById(userId);
         if (user == null) {
@@ -106,7 +106,7 @@ public class UserService {
                     .toRepresentation();
 
             // 3. Flip the flag to false
-            keycloakUser.setEnabled(false);
+            keycloakUser.setEnabled(state);
 
             // 4. Push the update back to Keycloak
             keycloak.realm(realmName)
@@ -141,5 +141,49 @@ public class UserService {
             }
         }
         return users;
+    }
+
+    @Transactional
+    public User getUserByIdWithStatus(long id) {
+
+        User user = userRepository.findById(id);
+
+        if (user == null) {
+            return null;
+        }
+
+
+        if (user.getKeycloakId() != null) {
+
+            try {
+
+                String realmName = "usager";
+
+                boolean isKeycloakEnabled =
+                        keycloak.realm(realmName)
+                                .users()
+                                .get(user.getKeycloakId())
+                                .toRepresentation()
+                                .isEnabled();
+
+
+                user.setEnabled(isKeycloakEnabled);
+
+
+            } catch (Exception e) {
+
+                user.setEnabled(true);
+
+                System.err.println(
+                        "Could not resolve status for user ID "
+                                + user.getId()
+                                + ": "
+                                + e.getMessage()
+                );
+            }
+        }
+
+
+        return user;
     }
 }

@@ -1,29 +1,42 @@
 -- Tags
 INSERT INTO app.tag (name) VALUES
-('Sci-Fi'),
-('Action'),
-('Drama'),
-('Comedy');
+('Sci-Fi'),    -- ID 1
+('Action'),    -- ID 2
+('Drama'),     -- ID 3
+('Comedy'),    -- ID 4
+('Biography'), -- ID 5
+('History'),   -- ID 6
+('War'),       -- ID 7
+('Adventure'), -- ID 8
+('Thriller'),  -- ID 9
+('Crime'),     -- ID 10
+('Mystery');   -- ID 11
 
 -- Movies
-INSERT INTO app.movie (title, description, year, movieLength, thumbnail, director, writer, studio, language) VALUES
-('Interstellar', 'A team of explorers travel through a wormhole in space.', 2014, 169.0, 'https://tse3.mm.bing.net/th/id/OIP.Z6aUuDLMpZtMYF1y9LYqSwHaLH?cb=thfvnextfalcon2&rs=1&pid=ImgDetMain&o=7&rm=3', 'Christopher Nolan', 'Jonathan Nolan', 'Paramount', 'English'),
-('The Matrix', 'A computer hacker learns from mysterious rebels about the true nature of his reality.', 1999, 136.0, 'https://th.bing.com/th/id/R.d60d296c62dc75447bbafed62451f246?rik=sdz68QwhV9VbnQ&riu=http%3a%2f%2fshatthemovies.com%2fwp-content%2fuploads%2f2017%2f10%2fhEpWvX6Bp79eLxY1kX5ZZJcme5U.jpg&ehk=rCEZalvHRg9Hzt4V6IzDGmsbn2d8Oom5JJYSTQH3NNw%3d&risl=&pid=ImgRaw&r=0', 'Lana Wachowski', 'Lilly Wachowski', 'Warner Bros.', 'English'),
-('Inception', 'A thief who steals corporate secrets through the use of dream-sharing technology.', 2010, 148.0, 'https://cdn.shopify.com/s/files/1/1416/8662/products/inception_2010_imax_original_film_art_2000x.jpg?v=1551890318', 'Christopher Nolan', 'Christopher Nolan', 'Warner Bros.', 'English'),
-('The Dark Knight', 'When the menace known as the Joker wreaks havoc on Gotham.', 2008, 152.0, 'https://tse1.mm.bing.net/th/id/OIP.1AjXRjwX74DedUFn5sBnXgHaJ4?cb=thfvnextfalcon2&rs=1&pid=ImgDetMain&o=7&rm=3', 'Christopher Nolan', 'Jonathan Nolan', 'Warner Bros.', 'English'),
-('Superbad', 'Two co-dependent high school seniors are forced to deal with separation anxiety.', 2007, 113.0, 'https://image.tmdb.org/t/p/original/2pcIeB50XjM8x0V5Wv6r6VAvArM.jpg', 'Greg Mottola', 'Seth Rogen', 'Columbia Pictures', 'English');
+INSERT INTO app.movie (title, description, year, movieLength, thumbnail, director, writer, studio, language, streamId) VALUES
+('October Sky', 'The true story of Homer Hickam, a coal miner''s son who was inspired by the first Sputnik launch to take up rocketry against his father''s wishes.', 1999, 107.0, 'https://image.tmdb.org/t/p/w600_and_h900_face/umWrXCIWdcYPf764ruvMRCpG3cA.jpg', 'Joe Johnston', 'Lewis Colick', 'Universal Pictures', 'English, Hindi', '503e200babbbbcddb3adb701b0f0698b&serverId=b30f92c5262844529f52a9c1f004358b'),
+('Empire Of The Sun', 'A young English boy struggles to survive under Japanese occupation during World War II.', 1987, 153.0, 'https://m.media-amazon.com/images/M/MV5BMWY2NjdkYzEtYWZhZS00YTdhLWJhMGQtZjkxZjZkODQyYWY5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg', 'Steven Spielberg', 'Tom Stoppard', 'Amblin Entertainment', 'English', '0d83298bb3e74129c6c73049cfa81d31&serverId=b30f92c5262844529f52a9c1f004358b'),
+('Project Hail Mary', 'Alone on a tiny spaceship, a lone astronaut must save Earth from an extinction-level event.', 2026, 120.0, 'https://image.tmdb.org/t/p/w600_and_h900_face/yihdXomYb5kTeSivtFndMy5iDmf.jpg', 'Phil Lord', 'Drew Goddard', 'Metro-Goldwyn-Mayer', 'English, Hindi', '34565c3c98daeda82f930a4745095db4&serverId=b30f92c5262844529f52a9c1f004358b'),
+('12 Angry Men', 'The jury in a New York City murder trial is frustrated by a single member whose skeptical caution forces them to more carefully consider the evidence.', 1957, 96.0, 'https://upload.wikimedia.org/wikipedia/commons/b/b5/12_Angry_Men_%281957_film_poster%29.jpg', 'Sidney Lumet', 'Reginald Rose', 'Orion-Nova Productions', 'English', '163fe62e8b6a6c8d27cb2efd0dcb8c5d&serverId=b30f92c5262844529f52a9c1f004358b'),
+('Contact', 'Dr. Ellie Arroway, after years of searching, finds conclusive radio proof of extraterrestrial intelligence, sending her on a journey to decode their machine.', 1997, 150.0, 'https://image.tmdb.org/t/p/w600_and_h900_face/bCpMIywuNZeWt3i5UMLEIc0VSwM.jpg', 'Robert Zemeckis', 'James V. Hart', 'Warner Bros.', 'English', '50bfd6ff9728d15da56b97490128e04b&serverId=b30f92c5262844529f52a9c1f004358b');
 
 -- Map Movies to Tags (Movie/Tag Bridge Table)
 INSERT INTO app.movie_tags (movie_id, tag_id) VALUES
-(1, 1), -- Interstellar -> Sci-Fi
-(1, 3), -- Interstellar -> Drama
-(2, 1), -- The Matrix -> Sci-Fi
-(2, 2), -- The Matrix -> Action
-(3, 1), -- Inception -> Sci-Fi
-(3, 2), -- Inception -> Action
-(4, 2), -- The Dark Knight -> Action
-(4, 3), -- The Dark Knight -> Drama
-(5, 4); -- Superbad -> Comedy
+(1, 3),  -- October Sky -> Drama
+(1, 5),  -- October Sky -> Biography
+(1, 6),  -- October Sky -> History
+(2, 3),  -- Empire Of The Sun -> Drama
+(2, 6),  -- Empire Of The Sun -> History
+(2, 7),  -- Empire Of The Sun -> War
+(3, 1),  -- Project Hail Mary -> Sci-Fi
+(3, 2),  -- Project Hail Mary -> Action
+(3, 8),  -- Project Hail Mary -> Adventure
+(3, 9),  -- Project Hail Mary -> Thriller
+(4, 3),  -- 12 Angry Men -> Drama
+(4, 10), -- 12 Angry Men -> Crime
+(5, 1),  -- Contact -> Sci-Fi
+(5, 3),  -- Contact -> Drama
+(5, 11); -- Contact -> Mystery
 
 -- Users
 INSERT INTO app.app_user (username, email, keycloak_id) VALUES
@@ -33,12 +46,12 @@ INSERT INTO app.app_user (username, email, keycloak_id) VALUES
 -- User Watchlists & History (User/Movie Bridge Table)
 INSERT INTO app.watch_movie_user (user_id, movie_id, status, saved, rating) VALUES
 -- (User 1) Interactions
-(1, 1, 'WATCHED', true, 5),       -- Watched Interstellar, on watchlist, rated 5
-(1, 2, 'WATCHING', false, NULL),   -- Watching The Matrix, not on watchlist
-(1, 3, 'WATCHED', false, 4),       -- Watched Inception, not on watchlist, rated 4
-(1, 4, 'WATCHING', true, NULL),    -- Watching The Dark Knight, on watchlist
+(1, 1, 'WATCHED', true, 5),       -- Watched October Sky, on watchlist, rated 5
+(1, 2, 'WATCHING', false, NULL),   -- Watching Empire Of The Sun, not on watchlist
+(1, 3, 'WATCHED', false, 4),       -- Watched Project Hail Mary, not on watchlist, rated 4
+(1, 4, 'WATCHING', true, NULL),    -- Watching 12 Angry Men, on watchlist
 -- (User 2) Interactions
-(2, 1, 'WATCHING', true, NULL),    -- Watching Interstellar, on watchlist
-(2, 3, 'WATCHED', true, 5),        -- Watched Inception, on watchlist, rated 5
-(2, 4, 'WATCHED', false, 4),       -- Watched The Dark Knight, not on watchlist, rated 4
-(2, 5, 'WATCHING', true, NULL);    -- Watching Superbad, on watchlist
+(2, 1, 'WATCHING', true, NULL),    -- Watching October Sky, on watchlist
+(2, 3, 'WATCHED', true, 5),        -- Watched Project Hail Mary, on watchlist, rated 5
+(2, 4, 'WATCHED', false, 4),       -- Watched 12 Angry Men, not on watchlist, rated 4
+(2, 5, 'WATCHING', true, NULL);    -- Watching Contact, on watchlist

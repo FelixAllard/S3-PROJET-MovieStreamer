@@ -99,7 +99,7 @@ public class UserDataTest {
         when(userResource.toRepresentation()).thenReturn(keycloakUser);
         doNothing().when(userResource).update(keycloakUser);
 
-        userService.disableUser(1L);
+        userService.disableOrDisableUser(1L, false);
 
         assertFalse(keycloakUser.isEnabled());
         verify(userResource, times(1)).update(keycloakUser);
@@ -110,7 +110,7 @@ public class UserDataTest {
         when(userRepository.findById(99L)).thenReturn(null);
 
         WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userService.disableUser(99L));
+                () -> userService.disableOrDisableUser(99L, false));
 
         assertEquals(404, ex.getResponse().getStatus());
         verify(keycloak, never()).realm(anyString());
@@ -126,7 +126,7 @@ public class UserDataTest {
                 .thenThrow(new RuntimeException("Keycloak down"));
 
         WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userService.disableUser(1L));
+                () -> userService.disableOrDisableUser(1L, false));
 
         assertEquals(500, ex.getResponse().getStatus());
     }

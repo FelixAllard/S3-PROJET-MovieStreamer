@@ -37,6 +37,7 @@ public class Movie {
     public String writer;
     public String studio;
     public String language;
+    public String streamId;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<WatchMovieUser> watchedMovieUsers = new ArrayList<>();

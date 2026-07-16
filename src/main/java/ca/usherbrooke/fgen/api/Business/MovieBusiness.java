@@ -3,12 +3,21 @@ package ca.usherbrooke.fgen.api.Business;
 import ca.usherbrooke.fgen.api.Data.MovieData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,12 +27,217 @@ import java.util.Map;
 public class MovieBusiness {
     private final MovieData movieData;
 
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    @ConfigProperty(name = "jellyfin.server.url")
+    String jellyfinUrl;
+
+    @ConfigProperty(name = "jellyfin.username")
+    String jellyfinUsername;
+
+    @ConfigProperty(name = "jellyfin.password")
+    String jellyfinPassword;
+
+    private String cachedToken = null;
+    private String cachedUserId = null;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
 
     @Inject
     public MovieBusiness(MovieData movieData) {
         this.movieData = movieData;
     }
 
+    public String getPlaybackInfo(long movieId) {
+
+        Movie movie = getMovieByMovieId(movieId);
+        String streamId = movie.getStreamId();
+
+        if (streamId == null || streamId.isEmpty()) {
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("Streaming metadata is unavailable.")
+                            .type(MediaType.APPLICATION_JSON)
+                            .build()
+            );
+        }
+
+        try {
+
+            String token = getOrAuthenticateJellyfinToken();
+
+            String cleanStreamId = streamId.split("&")[0];
+            String encodedStreamId =
+                    URLEncoder.encode(cleanStreamId, StandardCharsets.UTF_8);
+
+            String payload = """
+        {
+          "UserId":"%s",
+          "EnableDirectPlay":true,
+          "EnableDirectStream":true,
+          "EnableTranscoding":true,
+          "MaxStreamingBitrate":120000000,
+          "DeviceProfile":{
+            "Name":"Chrome",
+            "MaxStreamingBitrate":120000000
+          }
+        }
+        """.formatted(cachedUserId);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(
+                            URI.create(
+                                    String.format(
+                                            "%s/Items/%s/PlaybackInfo?UserId=%s&api_key=%s",
+                                            jellyfinUrl,
+                                            encodedStreamId,
+                                            cachedUserId,
+                                            token
+                                    )
+                            )
+                    )
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(payload))
+                    .build();
+
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException(response.body());
+            }
+
+            return response.body();
+
+        } catch (Exception ex) {
+
+            throw new WebApplicationException(
+                    Response.status(502)
+                            .entity("Failed to retrieve playback info.")
+                            .build()
+            );
+        }
+    }
+
+    public Map<String, String> getStreamUrl(
+            long movieId,
+            Integer audioStreamIndex,
+            Integer subtitleStreamIndex,
+            String playSessionId,
+            String mediaSourceId
+    ) {
+
+        Movie movie = getMovieByMovieId(movieId);
+
+        String streamId = movie.getStreamId();
+
+        if (streamId == null || streamId.isEmpty()) {
+            throw new WebApplicationException(
+                    Response.status(404)
+                            .entity("Streaming unavailable.")
+                            .build()
+            );
+        }
+
+        try {
+
+            String token = getOrAuthenticateJellyfinToken();
+
+            String cleanStreamId = streamId.split("&")[0];
+
+            String encodedStreamId =
+                    URLEncoder.encode(cleanStreamId, StandardCharsets.UTF_8);
+
+            StringBuilder url = new StringBuilder();
+
+            url.append(
+                    String.format(
+                            "%s/Videos/%s/master.m3u8" +
+                                    "?UserId=%s" +
+                                    "&api_key=%s" +
+                                    "&MediaSourceId=%s" +
+                                    "&PlaySessionId=%s" +
+                                    "&VideoCodec=h264" +
+                                    "&AudioCodec=aac" +
+                                    "&AudioChannels=2" +
+                                    "&SegmentContainer=ts" +
+                                    "&Context=Streaming" +
+                                    "&EnableSubtitlesInManifest=true",
+                            jellyfinUrl,
+                            encodedStreamId,
+                            cachedUserId,
+                            token,
+                            mediaSourceId,
+                            playSessionId
+                    )
+            );
+
+            if (audioStreamIndex != null) {
+                url.append("&AudioStreamIndex=").append(audioStreamIndex);
+            }
+
+            if (subtitleStreamIndex != null) {
+                url.append("&SubtitleStreamIndex=").append(subtitleStreamIndex);
+            }
+
+            Map<String, String> result = new HashMap<>();
+            System.out.println(url.toString());
+            result.put("streamUrl", url.toString());
+
+            return result;
+
+        } catch (Exception ex) {
+
+            cachedToken = null;
+            cachedUserId = null;
+
+            throw new WebApplicationException(
+                    Response.status(502)
+                            .entity("Streaming server unavailable.")
+                            .build()
+            );
+        }
+    }
+
+    private synchronized String getOrAuthenticateJellyfinToken() throws Exception {
+
+        if (cachedToken != null && cachedUserId != null) {
+            return cachedToken;
+        }
+
+        String authPayload = String.format(
+                "{\"Username\":\"%s\",\"Pw\":\"%s\"}",
+                jellyfinUsername,
+                jellyfinPassword
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(jellyfinUrl + "/Users/AuthenticateByName"))
+                .header("Content-Type", "application/json")
+                .header(
+                        "X-Emby-Authorization",
+                        "MediaBrowser Client=\"MovieApp\", Device=\"Server\", DeviceId=\"backend-01\", Version=\"1.0.0\""
+                )
+                .POST(HttpRequest.BodyPublishers.ofString(authPayload))
+                .build();
+
+        HttpResponse<String> response =
+                httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException(
+                    "Authentication failed: " + response.statusCode()
+            );
+        }
+
+        JsonNode root = objectMapper.readTree(response.body());
+
+        cachedToken = root.get("AccessToken").asText();
+        cachedUserId = root.get("User").get("Id").asText();
+
+        return cachedToken;
+    }
 
     public String ping() {
         return movieData.ping();

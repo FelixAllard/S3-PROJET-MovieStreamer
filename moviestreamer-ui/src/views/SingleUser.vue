@@ -3,122 +3,331 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { animate } from 'motion-v'
 import apiClient from '/src/services/ApiClient.js'
-import { getLoggedUser } from '/src/utils/auth.js'
-import { User } from '/src/entities/User.js' 
 
 const route = useRoute()
 const router = useRouter()
 
 const userProfile = ref(null)
-const profileRoleDisplay = ref('user') 
+const profileRoleDisplay = ref('user')
 const isViewingSelf = ref(false)
 const loading = ref(true)
 const errorMessage = ref('')
 
 const cardRef = ref(null)
 
-async function fetchUserProfile() {
+const isAdmin = ref(false)
+const actionLoading = ref(false)
+
+
+async function fetchUserProfile(showLoading = true) {
   try {
-    loading.value = true
+    if (showLoading) {
+      loading.value = true
+    }
     errorMessage.value = ''
-    
+
     const targetId = route.params.id
     isViewingSelf.value = (targetId === 'me')
 
-    const endpointUrl = isViewingSelf.value ? '/user/me' : `/user/${targetId}`
+    const endpointUrl = isViewingSelf.value 
+      ? '/user/me' 
+      : `/user/${targetId}`
+
     const data = await apiClient.get(endpointUrl)
+
     userProfile.value = data
 
-    if (isViewingSelf.value) {
-      const token = localStorage.getItem('token')
-      if (token) {
-        const base64Url = token.split('.')[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const payload = JSON.parse(atob(base64))
-        
-        const roles = payload.realm_access?.roles || []
-        profileRoleDisplay.value = roles.includes('admin') ? 'admin' : 'user'
-      }
-    } else {
-        if (data.realmRoles?.includes('admin') || data.username?.toLowerCase().includes('admin')) {
-            profileRoleDisplay.value = 'admin'
-        } else {
-            profileRoleDisplay.value = 'user'
-        }
+
+    const token = localStorage.getItem('token')
+
+    if (token) {
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const payload = JSON.parse(atob(base64))
+
+      const roles = payload.realm_access?.roles || []
+
+      isAdmin.value = roles.includes('admin')
+      profileRoleDisplay.value = isAdmin.value ? 'admin' : 'user'
     }
 
+
+    if (!isViewingSelf.value) {
+      if (
+        data.realmRoles?.includes('admin') ||
+        data.username?.toLowerCase().includes('admin')
+      ) {
+        profileRoleDisplay.value = 'admin'
+      }
+    }
+
+
   } catch (err) {
-    console.error('Failed fetching profile view record:', err)
+    console.error('Failed fetching profile:', err)
     errorMessage.value = 'Security Intercept: Access denied or record not found.'
   } finally {
+  if (showLoading) {
     loading.value = false
+    }
   }
 }
 
-watch(() => route.params.id, () => {
-  fetchUserProfile()
-})
+
+async function disableUser() {
+  try {
+    actionLoading.value = true
+
+    await apiClient.put(
+      `/user/${userProfile.value.id}/disable`
+    )
+
+    await fetchUserProfile()
+
+  } catch (err) {
+    console.error(err)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+
+async function enableUser() {
+  try {
+    actionLoading.value = true
+
+    await apiClient.put(
+      `/user/${userProfile.value.id}/enable`
+    )
+
+    await fetchUserProfile()
+
+  } catch (err) {
+    console.error(err)
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+watch(
+  () => route.params.id,
+  () => fetchUserProfile()
+)
+
 
 onMounted(() => {
   fetchUserProfile()
+
   if (cardRef.value) {
-    animate(cardRef.value, { opacity: [0, 1], y: [30, 0] }, { duration: 0.5, easing: 'ease-out' })
+    animate(
+      cardRef.value,
+      { opacity: [0, 1], y: [30, 0] },
+      { duration: 0.5, easing: 'ease-out' }
+    )
   }
 })
 </script>
 
+
 <template>
-  <div class="profile-page-wrapper py-5">
-    <div class="background-overlay"></div>
 
-    <div class="container d-flex justify-content-center align-items-center position-relative z-2 min-vh-75">
-      <div v-if="loading" class="text-center text-white my-5">
-        <div class="spinner-border text-purple mb-3" role="status"></div>
-        <p class="text-muted-custom">Assembling profile metrics...</p>
-      </div>
+<div class="profile-page-wrapper py-5">
 
-      <div v-else-if="errorMessage" class="error-panel text-center p-5">
-        <h3 class="text-danger-custom mb-3">🔒 Security Intercept</h3>
-        <p class="text-muted-custom mb-4">{{ errorMessage }}</p>
-        <button class="btn btn-outline-purple btn-sm" @click="router.back()">Return</button>
-      </div>
+  <div class="background-overlay"></div>
 
-      <div v-else ref="cardRef" class="profile-glass-card p-4 p-md-5 w-100">
-        <div class="d-flex align-items-center gap-3 mb-4 border-bottom-purple pb-3">
-          <div class="avatar-glow d-flex align-items-center justify-content-center">
-            <span class="fs-3 text-white fw-bold">{{ userProfile.username?.charAt(0).toUpperCase() }}</span>
-          </div>
-          <div>
-            <p class="eyebrow mb-0">Identity Profile Card</p>
-            <h2 class="profile-title mb-0">@{{ userProfile.username }}</h2>
-          </div>
-        </div>
 
-        <div class="row g-4">
-          <div v-if="!isViewingSelf" class="col-12 col-md-6">
-            <div class="meta-label">Database Identifier Key</div>
-            <div class="meta-value font-monospace text-purple-light">{{ userProfile.id }}</div>
-          </div>
+  <div class="container d-flex justify-content-center align-items-center position-relative z-2 min-vh-75">
 
-          <div class="col-12 col-md-6">
-            <div class="meta-label">Primary Email Address</div>
-            <div class="meta-value text-white">{{ userProfile.email || 'No email attached' }}</div>
-          </div>
 
-          <div class="col-12 col-md-6">
-            <div class="meta-label">System Authorization Role Access</div>
-            <div class="mt-2">
-              <span class="badge role-badge capitalize">{{ profileRoleDisplay }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-5 pt-3 d-flex gap-3">
-          <button class="btn back-btn btn-sm" @click="router.back()">← Return</button>
-        </div>
-      </div>
+    <div v-if="loading" class="text-center text-white my-5">
+      <div class="spinner-border text-purple mb-3"></div>
+      <p class="text-muted-custom">
+        Assembling profile metrics...
+      </p>
     </div>
+
+
+
+    <div v-else-if="errorMessage" class="error-panel text-center p-5">
+
+      <h3 class="text-danger-custom mb-3">
+        🔒 Security Intercept
+      </h3>
+
+      <p class="text-muted-custom mb-4">
+        {{ errorMessage }}
+      </p>
+
+      <button 
+        class="btn back-btn btn-sm"
+        @click="router.back()">
+        Return
+      </button>
+
+    </div>
+
+
+
+    <div 
+      v-else 
+      ref="cardRef"
+      class="profile-glass-card p-4 p-md-5 w-100"
+    >
+
+
+      <div class="d-flex align-items-center gap-3 mb-4 border-bottom-purple pb-3">
+
+        <div class="avatar-glow d-flex align-items-center justify-content-center">
+
+          <span class="fs-3 text-white fw-bold">
+            {{ userProfile.username?.charAt(0).toUpperCase() }}
+          </span>
+
+        </div>
+
+
+        <div>
+
+          <p class="eyebrow mb-0">
+            Identity Profile Card
+          </p>
+
+          <h2 class="profile-title mb-0">
+            @{{ userProfile.username }}
+          </h2>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="row g-4">
+
+
+        <div v-if="!isViewingSelf" class="col-12 col-md-6">
+
+          <div class="meta-label">
+            Database Identifier Key
+          </div>
+
+          <div class="meta-value font-monospace text-purple-light">
+            {{ userProfile.id }}
+          </div>
+
+        </div>
+
+
+
+        <div class="col-12 col-md-6">
+
+          <div class="meta-label">
+            Primary Email Address
+          </div>
+
+          <div class="meta-value text-white">
+            {{ userProfile.email || 'No email attached' }}
+          </div>
+
+        </div>
+
+
+
+        <div class="col-12 col-md-6">
+
+          <div class="meta-label">
+            System Authorization Role Access
+          </div>
+
+          <div class="mt-2">
+
+            <span class="badge role-badge">
+              {{ profileRoleDisplay }}
+            </span>
+
+          </div>
+
+        </div>
+
+
+
+      </div>
+
+
+
+
+      <!-- ADMIN USER CONTROL -->
+
+      <div 
+        v-if="isAdmin && !isViewingSelf"
+        class="mt-5 pt-3"
+      >
+
+        <div class="meta-label">
+          Account Status
+        </div>
+
+
+        <div class="mb-3">
+
+          <span
+            class="status-pill"
+            :class="userProfile.enabled !== false ? 'active' : 'disabled'"
+          >
+
+            {{ userProfile.enabled !== false ? 'Active' : 'Suspended' }}
+
+          </span>
+
+        </div>
+
+
+        <div class="d-flex gap-3">
+
+          <button
+            class="status-action enable-btn"
+            :disabled="actionLoading || userProfile.enabled !== false"
+            @click="enableUser"
+          >
+            <span v-if="actionLoading">Updating...</span>
+            <span v-else>✓ Enable User</span>
+          </button>
+
+
+          <button
+            class="status-action disable-btn"
+            :disabled="actionLoading || userProfile.enabled === false"
+            @click="disableUser"
+          >
+            <span v-if="actionLoading">Updating...</span>
+            <span v-else>⚠ Disable User</span>
+          </button>
+
+        </div>
+
+
+      </div>
+
+
+
+
+      <div class="mt-5 pt-3">
+
+        <button 
+          class="btn back-btn btn-sm"
+          @click="router.back()"
+        >
+          ← Return
+        </button>
+
+      </div>
+
+
+    </div>
+
   </div>
+
+</div>
+
 </template>
 
 <style scoped>
@@ -234,5 +443,72 @@ onMounted(() => {
 
 .text-purple {
   color: #a78bfa !important;
+}
+
+.status-pill {
+  padding: 0.4rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.status-pill.active {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.status-pill.disabled {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.status-action {
+  border-radius: 12px;
+  padding: 0.65rem 1.3rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+
+.status-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+
+/* Purple/green theme */
+.enable-btn {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+}
+
+
+.enable-btn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+  transform: translateY(-2px);
+}
+
+
+
+.disable-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+
+.disable-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+  transform: translateY(-2px);
 }
 </style>
