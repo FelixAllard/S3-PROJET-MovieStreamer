@@ -41,7 +41,7 @@ public class UserData {
     }
 
 
-
+    @Transactional
     public WatchMovieUser updateUserRatingByUserId(long userId, long movieId, int newRating){
         User user = userRepository.findById(userId);
 

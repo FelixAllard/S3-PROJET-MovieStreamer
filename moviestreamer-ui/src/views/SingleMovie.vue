@@ -25,9 +25,20 @@ const watchlistMessage = ref('')
 
 const movieId = computed(() => route.params.id)
 
+
+// Auth & Rating
+const userRating = ref(null)
+const ratingSubmitting = ref(false)
+const ratingSuccess = ref(false)
+const ratingError = ref('')
+const averageMovieRating = ref(null)
+const hoveredRating = ref(0)
+
 onMounted(async () => {
   await fetchMovie()
   await fetchSavedStatus()
+  await fetchUserRating()
+  await fetchMovieRating()
 
   if (pageRef.value) {
     animate(
@@ -100,6 +111,58 @@ async function toggleSavedStatus() {
 function goBack() {
   router.push('/movies')
 }
+
+
+async function fetchUserRating() {
+  if (!loggedIn.value || !userId.value) return
+
+  try {
+    const rating = await apiClient.get(
+        `/watch-history/rating/${userId.value}/${movieId.value}`
+    )
+    userRating.value = rating
+  } catch (err) {
+    // pas de WMU pour ce film — normal, pas une erreur
+    console.log('No existing rating for this movie')
+  }
+}
+
+async function submitRating(rating) {
+  if (!loggedIn.value) return
+
+  try {
+    ratingSubmitting.value = true
+    ratingError.value = ''
+    ratingSuccess.value = false
+
+    await apiClient.put(
+        `/user/${movieId.value}/${userId.value}/${rating}`
+    )
+
+    userRating.value = rating
+    ratingSuccess.value = true
+    setTimeout(() => ratingSuccess.value = false, 3000)
+
+  } catch (err) {
+    console.error('Failed to submit rating:', err)
+    if (err.status === 409) {
+      ratingError.value = 'You have already rated this movie.'
+    } else {
+      ratingError.value = 'Failed to submit rating. Please try again.'
+    }
+  } finally {
+    ratingSubmitting.value = false
+  }
+}
+async function fetchMovieRating() {
+  try {
+    const data = await apiClient.get(`/movie/${movieId.value}/rating`)
+    averageMovieRating.value = data
+  } catch (err) {
+    // Pas de ratings encore — normal
+    console.log('No ratings yet for this movie')
+  }
+}
 </script>
 
 <template>
@@ -152,6 +215,17 @@ function goBack() {
                 <span v-if="movie.year" class="meta-pill">{{ movie.year }}</span>
                 <span v-if="movie.movieLength" class="meta-pill">{{ movie.movieLength }} min</span>
                 <span v-if="movie.language" class="meta-pill">{{ movie.language }}</span>
+              </div>
+              <div v-if="averageMovieRating" class="average-rating-row mb-3">
+                <span class="average-stars">
+                    {{ '★'.repeat(Math.round(averageMovieRating.average)) }}{{ '☆'.repeat(10 - Math.round(averageMovieRating.average)) }}
+                </span>
+                            <span class="average-label">
+                    {{ averageMovieRating.average.toFixed(1) }}/10
+                    <span class="average-count">
+                        ({{ averageMovieRating.distribution.reduce((acc, d) => acc + d.count, 0) }} ratings)
+                    </span>
+                </span>
               </div>
 
               <div v-if="loggedIn" class="watchlist-actions mb-3">
@@ -210,6 +284,53 @@ function goBack() {
                     <h3 class="info-label">Language</h3>
                     <p class="info-value mb-0">{{ movie.language || 'Unknown' }}</p>
                   </div>
+                </div>
+              </div>
+
+              <!-- Rating Section -->
+              <div class="mt-4">
+                <div v-if="loggedIn" class="rating-card">
+                  <h3 class="info-label mb-3">Rate this movie</h3>
+
+                  <div class="stars-row">
+                    <button
+                        v-for="star in 10"
+                        :key="star"
+                        class="star-btn"
+                        :class="{
+                          'star-active': star <= (hoveredRating || userRating || 0),
+                          'star-hovered': star <= hoveredRating && hoveredRating > 0,
+                          'star-disabled': ratingSubmitting
+                        }"
+                        @click="submitRating(star)"
+                        @mouseenter="hoveredRating = star"
+                        @mouseleave="hoveredRating = 0"
+                        :disabled="ratingSubmitting"
+                    >
+                      {{ star <= (hoveredRating || userRating || 0) ? '★' : '☆' }}
+                    </button>
+                  </div>
+
+                  <p v-if="userRating" class="rating-label mt-2">
+                    Your rating: <strong>{{ userRating }}/10</strong>
+                  </p>
+
+                  <div v-if="ratingSuccess" class="rating-feedback success mt-2">
+                    Rating submitted successfully!
+                  </div>
+
+                  <div v-if="ratingError" class="rating-feedback error mt-2">
+                    {{ ratingError }}
+                  </div>
+                </div>
+
+                <div v-else class="rating-card text-center">
+                  <p class="mb-2" style="color: rgba(255,255,255,0.7)">
+                    Want to rate this movie?
+                  </p>
+                  <button class="btn login-to-rate-btn" @click="router.push('/login')">
+                    Sign in to rate
+                  </button>
                 </div>
               </div>
             </div>
@@ -423,5 +544,106 @@ function goBack() {
   border-radius: 24px;
   padding: 3rem 1rem;
   backdrop-filter: blur(12px);
+}
+
+.rating-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1rem 1rem 0.95rem;
+}
+
+.stars-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.1s ease, transform 0.1s ease;
+  line-height: 1;
+}
+
+.star-hovered {
+  color: #f59e0b;
+  transform: scale(1.2);
+}
+
+.star-active {
+  color: #f59e0b;
+}
+
+.star-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rating-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.rating-feedback {
+  font-size: 0.88rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.rating-feedback.success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.rating-feedback.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.login-to-rate-btn {
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.login-to-rate-btn:hover {
+  background: rgba(139, 92, 246, 0.3);
+  color: white;
+}
+
+.average-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.average-stars {
+  font-size: 1.2rem;
+  color: #f59e0b;
+  letter-spacing: 2px;
+}
+
+.average-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.average-count {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  font-weight: 400;
 }
 </style>

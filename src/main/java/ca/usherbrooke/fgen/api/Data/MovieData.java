@@ -129,4 +129,8 @@ public class MovieData {
                                     String writer, String title) {
         return movieRepository.searchMovies(tags, yearMin, yearMax, language, director, studio, writer, title);
     }
+
+    public List<Movie> getMoviesByPartialTitle(String title) {
+        return movieRepository.findMoviesByPartialName(title);
+    }
 }

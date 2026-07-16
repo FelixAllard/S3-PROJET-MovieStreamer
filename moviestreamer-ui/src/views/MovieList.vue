@@ -86,16 +86,6 @@ function normalizeMovieResponse(data) {
   return []
 }
 
-function filterMoviesLocally(query) {
-  const lowerQuery = query.toLowerCase()
-
-  return allMovies.value.filter(movie => {
-    const titleMatch = movie.title?.toLowerCase().includes(lowerQuery)
-    const descriptionMatch = movie.description?.toLowerCase().includes(lowerQuery)
-    const tagMatch = movie.tags?.some(tag => tag.name?.toLowerCase().includes(lowerQuery))
-    return titleMatch || descriptionMatch || tagMatch
-  })
-}
 
 function triggerSearchImpact() {
   searchFxActive.value = false
@@ -115,27 +105,23 @@ async function searchMovies() {
   searchButtonPressed.value = true
   setTimeout(() => { searchButtonPressed.value = false }, 180)
   triggerSearchImpact()
+
   if (!query) { clearSearch(); return }
+
   try {
     loading.value = true
     isSearching.value = true
     errorMessage.value = ''
 
-    const data = await apiClient.get(`/movie/name/${encodeURIComponent(query)}`)
-    const normalizedMovies = normalizeMovieResponse(data)
+    const data = await apiClient.get(`/movie/partial-title/${encodeURIComponent(query)}`)
+    movies.value = normalizeMovieResponse(data)
 
-    if (normalizedMovies.length > 0) {
-      movies.value = normalizedMovies
-    } else {
-      const fallbackResults = filterMoviesLocally(query)
-      movies.value = fallbackResults
-      if (fallbackResults.length === 0) errorMessage.value = 'No movies found for that search.'
-    }
+    if (movies.value.length === 0)
+      errorMessage.value = 'No movies found for that search.'
+
   } catch (err) {
-    console.warn('Search endpoint unavailable, using local filter:', err)
-    const fallbackResults = filterMoviesLocally(query)
-    movies.value = fallbackResults
-    if (fallbackResults.length === 0) errorMessage.value = 'No movies found for that search.'
+    console.error('Search failed:', err)
+    errorMessage.value = 'Search failed. Please try again.'
   } finally {
     loading.value = false
 
