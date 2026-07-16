@@ -77,20 +77,20 @@ onBeforeUnmount(() => {
         <div class="row text-center g-4">
           <div class="col-md-4">
             <div class="stat-item">
-              <h2 class="stat-number">10 000+</h2>
-              <p class="stat-label">Films disponibles</p>
+              <h2 class="stat-number">5</h2>
+              <p class="stat-label">Movies available</p>
             </div>
           </div>
           <div class="col-md-4">
             <div class="stat-item">
               <h2 class="stat-number">50+</h2>
-              <p class="stat-label">Genres couverts</p>
+              <p class="stat-label">Different genres</p>
             </div>
           </div>
           <div class="col-md-4">
             <div class="stat-item">
               <h2 class="stat-number">100%</h2>
-              <p class="stat-label">Conçu par des passionnés</p>
+              <p class="stat-label">Developed by passionates</p>
             </div>
           </div>
         </div>

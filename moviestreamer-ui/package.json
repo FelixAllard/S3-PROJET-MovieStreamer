@@ -11,6 +11,7 @@
   "dependencies": {
     "@tanstack/vue-query": "^5.101.0",
     "bootstrap": "^5.3.8",
+    "hls": "^0.0.1",
     "hls.js": "^1.6.16",
     "motion-v": "^2.2.1",
     "motion-vue": "^0.0.1",
