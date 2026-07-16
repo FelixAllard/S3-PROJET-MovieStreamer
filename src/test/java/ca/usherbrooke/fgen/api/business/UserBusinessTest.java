@@ -51,34 +51,43 @@ public class UserBusinessTest {
         verify(userService, times(1)).getAllUsersWithStatus();
     }
     @Test
-    void getUserByUserId_delegueAUserDataEtRetourneUtilisateur() {
+    void getUserByUserId_delegueAUserServiceEtRetourneUtilisateur() {
         User user = new User();
-        when(userData.getUserByUserId(1L)).thenReturn(user);
+
+        when(userService.getUserByIdWithStatus(1L))
+                .thenReturn(user);
 
         User result = userBusiness.getUserByUserId(1L);
 
         assertEquals(user, result);
-        verify(userData, times(1)).getUserByUserId(1L);
+
+        verify(userService, times(1))
+                .getUserByIdWithStatus(1L);
     }
 
     @Test
-    void getUserByUserId_retourneNull_siUtilisateurInexistant() {
-        when(userData.getUserByUserId(99L)).thenReturn(null);
+    void getUserByUserId_retourne404_siUtilisateurInexistant() {
+        when(userService.getUserByIdWithStatus(99L))
+                .thenReturn(null);
 
-        WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> userBusiness.getUserByUserId(99L));
+        WebApplicationException ex = assertThrows(
+                WebApplicationException.class,
+                () -> userBusiness.getUserByUserId(99L)
+        );
 
         assertEquals(404, ex.getResponse().getStatus());
-        verify(userData, times(1)).getUserByUserId(99L);
+
+        verify(userService, times(1))
+                .getUserByIdWithStatus(99L);
     }
 
     @Test
     void disableUser_appelleServiceAvecIdValide() {
-        doNothing().when(userService).disableUser(1L);
+        doNothing().when(userService).disableOrDisableUser(1L, false);
 
         userBusiness.disableUser(1L);
 
-        verify(userService, times(1)).disableUser(1L);
+        verify(userService, times(1)).disableOrDisableUser(1L, false);
     }
 
     @Test
@@ -87,7 +96,7 @@ public class UserBusinessTest {
                 () -> userBusiness.disableUser(0L));
 
         assertEquals(400, ex.getResponse().getStatus());
-        verify(userService, never()).disableUser(anyLong());
+        verify(userService, never()).disableOrDisableUser(anyLong(), eq(false));
     }
 
     @Test
@@ -96,7 +105,7 @@ public class UserBusinessTest {
                 () -> userBusiness.disableUser(-5L));
 
         assertEquals(400, ex.getResponse().getStatus());
-        verify(userService, never()).disableUser(anyLong());
+        verify(userService, never()).disableOrDisableUser(anyLong(), eq(false));
     }
 
     @Test
