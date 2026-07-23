@@ -2,13 +2,13 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
 
-import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { animate } from 'motion-v'
+import {ref, onMounted, computed, onBeforeUnmount, nextTick} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {animate} from 'motion-v'
 import Hls from 'hls.js'
 import apiClient from '/src/services/ApiClient.js'
-import { Movie } from '/src/entities/Movie.js'
-import { isLoggedIn, resolveDbUserId } from '/src/utils/auth.js'
+import {Movie} from '/src/entities/Movie.js'
+import {isLoggedIn, resolveDbUserId} from '/src/utils/auth.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -61,16 +61,16 @@ onMounted(async () => {
   if (pageRef.value) {
     animate(
         pageRef.value,
-        { opacity: [0, 1] },
-        { duration: 0.45, easing: 'ease-out' }
+        {opacity: [0, 1]},
+        {duration: 0.45, easing: 'ease-out'}
     )
   }
 
   if (contentRef.value) {
     animate(
         contentRef.value,
-        { opacity: [0, 1], y: [30, 0], scale: [0.98, 1] },
-        { duration: 0.55, easing: 'ease-out' }
+        {opacity: [0, 1], y: [30, 0], scale: [0.98, 1]},
+        {duration: 0.55, easing: 'ease-out'}
     )
   }
 })
@@ -165,11 +165,19 @@ async function startStreaming() {
 
       // Parse Audio Tracks
       audioTracks.value = allStreams
-        .filter(s => s.Type === 'Audio')
-        .map(s => ({
-          index: s.Index,
-          label: s.DisplayTitle || s.Language || `Audio Track #${s.Index}`
-        }))
+          .filter(s => s.Type === 'Audio')
+          .map(s => ({
+            index: s.Index,
+            label: s.DisplayTitle || s.Language || `Audio Track #${s.Index}`
+          }))
+
+      const savedAudio = localStorage.getItem(`preferred_audio_${movieId.value}`)
+      if (savedAudio !== null) {
+        selectedAudioIndex.value = Number(savedAudio)
+      } else if (selectedAudioIndex.value === null && audioTracks.value.length > 0) {
+        const defaultAudio = allStreams.find(s => s.Type === 'Audio' && s.IsDefault)
+        selectedAudioIndex.value = defaultAudio ? defaultAudio.Index : audioTracks.value[0].index
+      }
 
       // Select the default audio track if not set
       if (selectedAudioIndex.value === null && audioTracks.value.length > 0) {
@@ -179,11 +187,11 @@ async function startStreaming() {
 
       // Parse Subtitle Tracks
       subtitleTracks.value = allStreams
-        .filter(s => s.Type === 'Subtitle')
-        .map(s => ({
-          index: s.Index,
-          label: s.DisplayTitle || s.Language || `Subtitle Track #${s.Index}`
-        }))
+          .filter(s => s.Type === 'Subtitle')
+          .map(s => ({
+            index: s.Index,
+            label: s.DisplayTitle || s.Language || `Subtitle Track #${s.Index}`
+          }))
     }
 
     // Step B: Ask your spring boot backend for the computed master stream url using our selected parameters
@@ -195,7 +203,9 @@ async function startStreaming() {
     isPlaying.value = true
     // Fallback URL mechanism if playbackInfo fails
     streamUrl.value = `https://jellyfin.seeroy.com/Videos/${movieId.value}/master.m3u8?api_key=bdc25e36b1ef4699acd7cada300310ae&MediaSourceId=${movieId.value}`
-    setTimeout(() => { initPlayer() }, 50)
+    setTimeout(() => {
+      initPlayer()
+    }, 50)
   } finally {
     loadingStream.value = false
   }
@@ -206,7 +216,7 @@ async function loadActiveTrackStream() {
   isVideoBuffering.value = true
   const encodedId = encodeURIComponent(movieId.value)
 
-  // Build query string reflecting selected audio & subtitle indices
+  // Ensure we explicitly pass the chosen audio stream index
   let queryParams = `?playSessionId=${playSessionId.value}&mediaSourceId=${mediaSourceId.value}`
   if (selectedAudioIndex.value !== null) {
     queryParams += `&audioStreamIndex=${selectedAudioIndex.value}`
@@ -216,13 +226,15 @@ async function loadActiveTrackStream() {
   }
 
   try {
+    // Force a timestamp or unique param if your backend/proxy caches the stream URL response
+    queryParams += `&t=${Date.now()}`
+
     const data = await apiClient.get(`/movie/${encodedId}/stream${queryParams}`)
 
     if (data && data.streamUrl) {
       streamUrl.value = data.streamUrl
       isPlaying.value = true
 
-      // Re-initialize player with new source stream
       await nextTick()
       initPlayer()
     } else {
@@ -230,12 +242,17 @@ async function loadActiveTrackStream() {
     }
   } catch (err) {
     console.error('Track change error:', err)
+    isVideoBuffering.value = false
   }
 }
 
 async function onTrackChange() {
-  destroyHls()
-  await loadActiveTrackStream()
+  if (selectedAudioIndex.value !== null) {
+    localStorage.setItem(`preferred_audio_${movieId.value}`, selectedAudioIndex.value)
+  }
+
+  // Hard reload the entire browser page
+  window.location.reload()
 }
 
 function initPlayer() {
@@ -258,15 +275,14 @@ function initPlayer() {
       hlsInstance.attachMedia(video)
 
       hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play()
+        video.play().catch(() => {
+        })
       })
 
       hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log("Audio:", hlsInstance.audioTracks)
         console.log("Subtitles:", hlsInstance.subtitleTracks)
       })
-
-      hlsInstance.subtitleTracks
 
       // 2. Listen for subtitle tracks being loaded by HLS.js
       hlsInstance.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (event, data) => {
@@ -297,7 +313,8 @@ function initPlayer() {
       // For Safari (Native HLS handling)
       video.src = streamUrl.value
       video.addEventListener('loadedmetadata', () => {
-        video.play()
+        video.play().catch(() => {
+        })
         // Enable native text tracks if Safari
         if (selectedSubtitleIndex.value !== null && video.textTracks) {
           for (let i = 0; i < video.textTracks.length; i++) {
@@ -312,7 +329,8 @@ function initPlayer() {
     }
   } else {
     video.src = streamUrl.value
-    video.play()
+    video.play().catch(() => {
+    })
   }
 }
 
@@ -338,7 +356,6 @@ async function fetchUserRating() {
     )
     userRating.value = rating
   } catch (err) {
-    // pas de WMU pour ce film — normal, pas une erreur
     console.log('No existing rating for this movie')
   }
 }
@@ -370,12 +387,12 @@ async function submitRating(rating) {
     ratingSubmitting.value = false
   }
 }
+
 async function fetchMovieRating() {
   try {
     const data = await apiClient.get(`/movie/${movieId.value}/rating`)
     averageMovieRating.value = data
   } catch (err) {
-    // Pas de ratings encore — normal
     console.log('No ratings yet for this movie')
   }
 }
@@ -435,9 +452,11 @@ async function fetchMovieRating() {
               </div>
               <div v-if="averageMovieRating" class="average-rating-row mb-3">
                 <span class="average-stars">
-                    {{ '★'.repeat(Math.round(averageMovieRating.average)) }}{{ '☆'.repeat(10 - Math.round(averageMovieRating.average)) }}
+                    {{
+                    '★'.repeat(Math.round(averageMovieRating.average))
+                  }}{{ '☆'.repeat(10 - Math.round(averageMovieRating.average)) }}
                 </span>
-                            <span class="average-label">
+                <span class="average-label">
                     {{ averageMovieRating.average.toFixed(1) }}/10
                     <span class="average-count">
                         ({{ averageMovieRating.distribution.reduce((acc, d) => acc + d.count, 0) }} ratings)
@@ -558,21 +577,21 @@ async function fetchMovieRating() {
           <div class="video-container">
 
             <video
-              v-if="isPlaying"
-              ref="videoPlayerRef"
-              controls
-              autoplay
-              class="stream-player-active"
-              @waiting="onVideoWaiting"
-              @playing="onVideoPlaying"
-              @canplay="onVideoPlaying"
+                v-if="isPlaying"
+                ref="videoPlayerRef"
+                controls
+                autoplay
+                class="stream-player-active"
+                @waiting="onVideoWaiting"
+                @playing="onVideoPlaying"
+                @canplay="onVideoPlaying"
             >
               Your browser does not support HTML5 video playback.
             </video>
 
             <div
-              v-if="isPlaying && isVideoBuffering"
-              class="video-buffering-overlay"
+                v-if="isPlaying && isVideoBuffering"
+                class="video-buffering-overlay"
             >
               <div class="buffering-spinner-box">
                 <div class="spinner-border custom-spinner-glow mb-3" role="status"></div>
@@ -581,15 +600,15 @@ async function fetchMovieRating() {
             </div>
 
             <div
-              v-else-if="!isPlaying"
-              class="player-poster-overlay-active"
-              :style="movie.thumbnail ? { backgroundImage: `url(${movie.thumbnail})` } : {}"
+                v-else-if="!isPlaying"
+                class="player-poster-overlay-active"
+                :style="movie.thumbnail ? { backgroundImage: `url(${movie.thumbnail})` } : {}"
             >
               <div class="backdrop-blur-filter"></div>
               <button
-                class="central-play-btn"
-                :disabled="loadingStream"
-                @click="startStreaming"
+                  class="central-play-btn"
+                  :disabled="loadingStream"
+                  @click="startStreaming"
               >
                 <span v-if="loadingStream" class="spinner-border spinner-purple" role="status"></span>
                 <span v-else class="play-arrow"></span>
@@ -602,37 +621,39 @@ async function fetchMovieRating() {
           </div>
         </div>
 
+        <!-- Track Selectors: Audio selector kept, Subtitles visually removed via v-if="false" -->
         <div v-if="isPlaying" class="track-selectors-panel mt-3">
           <div class="row g-3">
             <div class="col-12 col-md-6" v-if="audioTracks.length > 1">
               <label class="track-select-label">Audio Language</label>
               <select
-                class="form-select track-dropdown"
-                v-model="selectedAudioIndex"
-                @change="onTrackChange"
+                  class="form-select track-dropdown"
+                  v-model="selectedAudioIndex"
+                  @change="onTrackChange"
               >
                 <option
-                  v-for="track in audioTracks"
-                  :key="track.index"
-                  :value="track.index"
+                    v-for="track in audioTracks"
+                    :key="track.index"
+                    :value="track.index"
                 >
                   {{ track.label }}
                 </option>
               </select>
             </div>
 
-            <div class="col-12 col-md-6">
+            <!-- Subtitle UI hidden visually without removing data functionality -->
+            <div class="col-12 col-md-6" v-if="false">
               <label class="track-select-label">Subtitles</label>
               <select
-                class="form-select track-dropdown"
-                v-model="selectedSubtitleIndex"
-                @change="onTrackChange"
+                  class="form-select track-dropdown"
+                  v-model="selectedSubtitleIndex"
+                  @change="onTrackChange"
               >
                 <option :value="null">Off</option>
                 <option
-                  v-for="track in subtitleTracks"
-                  :key="track.index"
-                  :value="track.index"
+                    v-for="track in subtitleTracks"
+                    :key="track.index"
+                    :value="track.index"
                 >
                   {{ track.label }}
                 </option>
@@ -669,10 +690,9 @@ async function fetchMovieRating() {
 .background-overlay {
   position: absolute;
   inset: 0;
-  background:
-      linear-gradient(180deg, rgba(5, 3, 10, 0.35), rgba(5, 3, 10, 0.88)),
-      radial-gradient(circle at top left, rgba(139, 92, 246, 0.22), transparent 30%),
-      radial-gradient(circle at top right, rgba(168, 85, 247, 0.16), transparent 25%);
+  background: linear-gradient(180deg, rgba(5, 3, 10, 0.35), rgba(5, 3, 10, 0.88)),
+  radial-gradient(circle at top left, rgba(139, 92, 246, 0.22), transparent 30%),
+  radial-gradient(circle at top right, rgba(168, 85, 247, 0.16), transparent 25%);
 }
 
 .movie-details-panel {
@@ -683,9 +703,8 @@ async function fetchMovieRating() {
   border-radius: 28px;
   backdrop-filter: blur(14px);
   padding: 2rem;
-  box-shadow:
-      0 20px 60px rgba(0, 0, 0, 0.45),
-      0 0 40px rgba(139, 92, 246, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45),
+  0 0 40px rgba(139, 92, 246, 0.12);
 }
 
 /* Widescreen Video Player Wrapper */
@@ -693,9 +712,8 @@ async function fetchMovieRating() {
   width: 100%;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow:
-    0 15px 45px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(139, 92, 246, 0.18);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6),
+  0 0 30px rgba(139, 92, 246, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background-color: #000;
 }
@@ -721,8 +739,8 @@ async function fetchMovieRating() {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 15; /* Sits directly above the video player elements */
-  pointer-events: none; /* Allows click events to pass down to native controls */
+  z-index: 15;
+  pointer-events: none;
 }
 
 .buffering-spinner-box {
@@ -736,8 +754,8 @@ async function fetchMovieRating() {
   width: 4rem;
   height: 4rem;
   border-width: 0.35em;
-  color: #a78bfa !important; /* Vivid Light Purple */
-  filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.75)); /* Soft High Contrast Outer Glow */
+  color: #a78bfa !important;
+  filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.75));
   animation: spinner-border .75s linear infinite;
 }
 
@@ -751,7 +769,6 @@ async function fetchMovieRating() {
   text-shadow: 0 0 8px rgba(167, 139, 250, 0.5), 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
-/* Blurred pre-play styling */
 .player-poster-overlay {
   position: absolute;
   inset: 0;
@@ -799,7 +816,6 @@ async function fetchMovieRating() {
   cursor: not-allowed;
 }
 
-/* Custom Purple Loading Spinner */
 .spinner-purple {
   color: #c4b5fd !important;
   width: 3rem;
@@ -807,7 +823,6 @@ async function fetchMovieRating() {
   border-width: 0.3em;
 }
 
-/* Minimalist CSS Play Arrow */
 .play-arrow {
   display: block;
   width: 0;
@@ -829,14 +844,12 @@ async function fetchMovieRating() {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
-/* Static Poster Styles */
 .poster-wrap {
   position: relative;
   overflow: hidden;
   border-radius: 24px;
-  box-shadow:
-      0 18px 50px rgba(0, 0, 0, 0.45),
-      0 0 28px rgba(139, 92, 246, 0.18);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45),
+  0 0 28px rgba(139, 92, 246, 0.18);
 }
 
 .poster-image {
@@ -993,18 +1006,16 @@ async function fetchMovieRating() {
   backdrop-filter: blur(12px);
 }
 
-/* Ensure the active video player dominates the cursor layers */
 .stream-player-active {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  z-index: 10; /* Force it on top of everything else */
-  pointer-events: auto !important; /* Ensure controls are fully responsive */
+  z-index: 10;
+  pointer-events: auto !important;
 }
 
-/* Clearer separation of the overlay state */
 .player-poster-overlay-active {
   position: absolute;
   inset: 0;
@@ -1016,14 +1027,6 @@ async function fetchMovieRating() {
   align-items: center;
   color: white;
   z-index: 5;
-}
-
-.backdrop-blur-filter {
-  position: absolute;
-  inset: 0;
-  background: rgba(12, 8, 24, 0.55);
-  backdrop-filter: blur(15px);
-  z-index: 1;
 }
 
 .track-selectors-panel {

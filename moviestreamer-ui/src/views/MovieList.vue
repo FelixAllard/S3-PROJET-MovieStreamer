@@ -137,6 +137,30 @@ async function searchMovies() {
   }
 }
 
+const importLoading = ref(false)
+
+async function importJellyfinMovies() {
+  try {
+    importLoading.value = true
+    errorMessage.value = ''
+
+    // Call the backend endpoint we created earlier
+    const data = await apiClient.post('/movie/import-jellyfin')
+    const importedCount = Array.isArray(data) ? data.length : 0
+
+    // Refresh the movie list to display the newly imported movies
+    await fetchAllMovies()
+
+    // Optional success message/feedback or alert
+    console.log(`Successfully imported ${importedCount} new movie(s) from Jellyfin.`)
+  } catch (err) {
+    console.error('Failed to import movies from Jellyfin:', err)
+    errorMessage.value = 'Failed to sync movies from Jellyfin.'
+  } finally {
+    importLoading.value = false
+  }
+}
+
 function clearSearch() {
   searchQuery.value = ''
   errorMessage.value = ''
@@ -330,6 +354,21 @@ function clearAdvancedSearch() {
           >
             <div v-if="searchFxActive" class="scan-line"></div>
             <div v-if="searchFxActive" class="impact-ring"></div>
+
+            <div class="d-flex align-items-center gap-3">
+              <span class="movie-count">{{ movieCountLabel }}</span>
+
+              <!-- Jellyfin Import Button (Admin Only) -->
+              <button
+                  v-if="isAdmin"
+                  class="btn import-jellyfin-btn"
+                  @click="importJellyfinMovies"
+                  :disabled="importLoading"
+                  title="Import movies from Jellyfin server"
+              >
+                {{ importLoading ? 'Syncing...' : '📥 Import Jellyfin' }}
+              </button>
+            </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 position-relative z-2">
               <h1 class="section-title display-6 fw-bold mb-0">Movies</h1>
@@ -1062,5 +1101,28 @@ function clearAdvancedSearch() {
   background: rgba(139, 92, 246, 0.55);
   border-color: rgba(139, 92, 246, 0.9);
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.35);
+}
+
+.import-jellyfin-btn {
+  background: linear-gradient(90deg, #0284c7, #0ea5e9, #38bdf8);
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.import-jellyfin-btn:hover:not(:disabled) {
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(14, 165, 233, 0.45);
+}
+
+.import-jellyfin-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 </style>

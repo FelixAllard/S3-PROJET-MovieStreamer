@@ -96,7 +96,6 @@ public class MoviePresentation {
     public Response postMovie(Movie movie) {
         Movie created = movieBusiness.postMovie(movie);
         return Response.status(Response.Status.CREATED).entity(created).build();
-
     }
 
     @GET
@@ -154,5 +153,16 @@ public class MoviePresentation {
     public Response getPlaybackInfo(@PathParam("id") long id) {
         String jsonString = movieBusiness.getPlaybackInfo(id);
         return Response.ok(jsonString).build();
+    }
+
+    @POST
+    @Path("import-jellyfin")
+    @RolesAllowed({"admin"})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response importMoviesFromJellyfin() {
+        List<Movie> importedMovies = movieBusiness.importNewMoviesFromJellyfin();
+        return Response.status(Response.Status.CREATED)
+                .entity(importedMovies)
+                .build();
     }
 }

@@ -28,6 +28,33 @@ public class MovieData {
 
     }
 
+    @Transactional
+    public Movie importMovieFromJellyfinData(Movie newMovie, List<String> genreNames) {
+        List<Tag> managedTags = new ArrayList<>();
+        if (genreNames != null) {
+            for (String genreName : genreNames) {
+                Tag existingTag = tagRepository.find("name", genreName).firstResult();
+                if (existingTag != null) {
+                    managedTags.add(existingTag);
+                } else {
+                    Tag newTag = new Tag();
+                    newTag.setName(genreName);
+                    tagRepository.persist(newTag);
+                    managedTags.add(newTag);
+                }
+            }
+        }
+
+        newMovie.setId(null);
+        newMovie.setTags(managedTags);
+        newMovie.setWatchedMovieUsers(null);
+
+        movieRepository.persist(newMovie);
+        Hibernate.initialize(newMovie.getTags());
+
+        return newMovie;
+    }
+
     public String ping(){
         return "pong!";
     }
@@ -86,6 +113,7 @@ public class MovieData {
 
         return movie;
     }
+
     public List<Movie> getMoviesByMovieTags(List<Integer> tagIds) {
         return movieRepository.findByTagIds(tagIds);
     }
@@ -105,6 +133,7 @@ public class MovieData {
         movie.setWriter(updatedMovie.writer == null ? "" : updatedMovie.writer);
         movie.setStudio(updatedMovie.studio == null ? "" : updatedMovie.studio);
         movie.setLanguage(updatedMovie.language == null ? "" : updatedMovie.language);
+        movie.setStreamId(updatedMovie.streamId == null ? "" : updatedMovie.streamId);
 
 
         Hibernate.initialize(movie.getWatchedMovieUsers()); // Add this line

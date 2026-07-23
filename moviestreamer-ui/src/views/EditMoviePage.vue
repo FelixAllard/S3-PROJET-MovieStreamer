@@ -33,6 +33,7 @@ const form = ref({
   year: '',
   movieLength: '',
   thumbnail: '',
+  streamId: '',
   tagIds: []
 })
 
@@ -65,6 +66,7 @@ async function fetchMovie() {
         year: movie.value.year || '',
         movieLength: movie.value.movieLength || '',
         thumbnail: movie.value.thumbnail || '',
+        streamId: movie.value.streamId || '',
         tagIds: movie.value.tags?.map(t => t.id) || []
       }
     } else {
@@ -117,6 +119,7 @@ async function saveMovie() {
       year: form.value.year ? Number(form.value.year) : null,
       movieLength: form.value.movieLength ? Number(form.value.movieLength) : null,
       thumbnail: form.value.thumbnail,
+      streamId: form.value.streamId,
       // Pass the actual tag objects (or at least objects with an ID)
       tags: form.value.tagIds.map(id => ({ id: id }))
     }
@@ -261,6 +264,18 @@ function goBack() {
                 <div class="form-group-dark">
                   <label class="field-label">Length (min)</label>
                   <input v-model="form.movieLength" type="number" class="field-input" placeholder="120" />
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-group-dark">
+                  <label class="field-label">Stream ID</label>
+                  <input
+                      v-model="form.streamId"
+                      type="text"
+                      class="field-input"
+                      placeholder="Jellyfin Item ID / Stream ID"
+                  />
                 </div>
               </div>
 

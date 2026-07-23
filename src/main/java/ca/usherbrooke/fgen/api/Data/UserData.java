@@ -56,12 +56,14 @@ public class UserData {
         if (watchMovieUser == null) {
             Movie movie = movieRepository.findById(movieId);
             if (movie == null) ExceptionUtils.throwException(404, "Movie Not Found");
-            watchMovieUser = new WatchMovieUser(0L,
-                    user,
-                    movie,
-                    MovieStatus.NOT_WATCHED,
-                    false,
-                    newRating);
+
+            watchMovieUser = new WatchMovieUser();
+            watchMovieUser.setUser(user);
+            watchMovieUser.setMovie(movie);
+            watchMovieUser.setStatus(MovieStatus.NOT_WATCHED);
+            watchMovieUser.setSaved(false);
+            watchMovieUser.setRating(newRating);
+
             user.watchedMovieUsers.add(watchMovieUser);
         }
         else {

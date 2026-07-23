@@ -2,6 +2,7 @@ package ca.usherbrooke.fgen.api.business;
 
 import ca.usherbrooke.fgen.api.Business.MovieBusiness;
 import ca.usherbrooke.fgen.api.Data.MovieData;
+import ca.usherbrooke.fgen.api.Data.TagData;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,12 +23,13 @@ import static org.mockito.Mockito.*;
 public class MovieBusinessTest {
 
     private MovieData movieData;
+    private TagData tagData;
     private MovieBusiness movieBusiness;
 
     @BeforeEach
     void setUp() {
         movieData = Mockito.mock(MovieData.class);
-        movieBusiness = new MovieBusiness(movieData);
+        movieBusiness = new MovieBusiness(movieData, tagData);
     }
 
     static Movie createValidMovie() {

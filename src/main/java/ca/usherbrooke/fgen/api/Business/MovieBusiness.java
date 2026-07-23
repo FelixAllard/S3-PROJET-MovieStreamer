@@ -1,12 +1,15 @@
 package ca.usherbrooke.fgen.api.Business;
 
 import ca.usherbrooke.fgen.api.Data.MovieData;
+import ca.usherbrooke.fgen.api.Data.TagData;
+import ca.usherbrooke.fgen.api.Entities.Tag;
 import ca.usherbrooke.fgen.api.Entities.Movie;
 import ca.usherbrooke.fgen.api.Utils.ExceptionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -26,6 +29,7 @@ import java.util.Map;
 @ApplicationScoped
 public class MovieBusiness {
     private final MovieData movieData;
+    private final TagData tagData;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -45,8 +49,9 @@ public class MovieBusiness {
 
 
     @Inject
-    public MovieBusiness(MovieData movieData) {
+    public MovieBusiness(MovieData movieData, TagData tagData) {
         this.movieData = movieData;
+        this.tagData = tagData;
     }
 
     public String getPlaybackInfo(long movieId) {
@@ -239,6 +244,134 @@ public class MovieBusiness {
         return cachedToken;
     }
 
+    public List<Movie> importNewMoviesFromJellyfin() {
+        try {
+            String token = getOrAuthenticateJellyfinToken();
+
+            String url = String.format(
+                    "%s/Users/%s/Items?IncludeItemTypes=Movie&Recursive=true&Fields=People,Studios,Overview,Genres&api_key=%s",
+                    jellyfinUrl,
+                    cachedUserId,
+                    token
+            );
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to fetch items from Jellyfin: " + response.statusCode());
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            JsonNode items = root.get("Items");
+
+            List<Movie> newlyImportedMovies = new ArrayList<>();
+
+            if (items != null && items.isArray()) {
+                for (JsonNode item : items) {
+                    String jellyfinId = item.has("Id") ? item.get("Id").asText() : "";
+                    String serverId = item.has("ServerId") ? item.get("ServerId").asText() : "";
+                    String constructedStreamId = jellyfinId + (serverId.isEmpty() ? "" : "&serverId=" + serverId);
+
+                    boolean exists = movieData.getAllMovies().stream()
+                            .anyMatch(m -> m.getStreamId() != null && m.getStreamId().startsWith(jellyfinId));
+
+                    if (!exists) {
+                        Movie newMovie = new Movie();
+                        newMovie.setTitle(item.has("Name") ? item.get("Name").asText() : "Unknown Title");
+                        newMovie.setDescription(item.has("Overview") ? item.get("Overview").asText() : "No description available.");
+                        newMovie.setYear(item.has("ProductionYear") ? item.get("ProductionYear").asInt() : 0);
+
+                        if (item.has("RunTimeTicks")) {
+                            long ticks = item.get("RunTimeTicks").asLong();
+                            float minutes = (float) Math.ceil(ticks / 600000000.0);
+                            newMovie.setMovieLength(minutes);
+                        } else {
+                            newMovie.setMovieLength(0.0f);
+                        }
+
+                        if (item.has("ImageTags") && item.has("ImageTags")) {
+                            String primaryTag = item.get("ImageTags").get("Primary").asText();
+                            newMovie.setThumbnail(String.format("%s/Items/%s/Images/Primary?tag=%s", jellyfinUrl, jellyfinId, primaryTag));
+                        } else {
+                            newMovie.setThumbnail("");
+                        }
+
+                        newMovie.setDirector(extractPeople(item, "Director"));
+                        newMovie.setStudio(extractStudio(item));
+                        newMovie.setWriter(extractPeople(item, "Writer"));
+                        newMovie.setLanguage(item.has("OfficialRating") ? item.get("OfficialRating").asText() : "English");
+                        newMovie.setStreamId(constructedStreamId);
+
+                        // Extract genre names into a simple list of strings
+                        List<String> genreNames = new ArrayList<>();
+                        if (item.has("Genres") && item.get("Genres").isArray()) {
+                            for (JsonNode genreNode : item.get("Genres")) {
+                                String genreName = genreNode.asText().trim();
+                                if (!genreName.isEmpty()) {
+                                    genreNames.add(genreName);
+                                }
+                            }
+                        }
+
+                        // Delegate the persistence and tag handling entirely to MovieData
+                        Movie savedMovie = movieData.importMovieFromJellyfinData(newMovie, genreNames);
+                        if (savedMovie != null) {
+                            newlyImportedMovies.add(savedMovie);
+                        }
+                    }
+                }
+            }
+
+            return newlyImportedMovies;
+
+        } catch (Exception ex) {
+            throw new WebApplicationException(
+                    Response.status(502)
+                            .entity("Failed to synchronize movies from Jellyfin: " + ex.getMessage())
+                            .build()
+            );
+        }
+    }
+
+    // Helper method to extract crew like Director or Writer from Jellyfin's 'People' array
+    private String extractPeople(JsonNode item, String type) {
+        if (item.has("People") && item.get("People").isArray()) {
+            List<String> names = new ArrayList<>();
+            for (JsonNode person : item.get("People")) {
+                if (person.has("Type") && type.equalsIgnoreCase(person.get("Type").asText())) {
+                    if (person.has("Name")) {
+                        names.add(person.get("Name").asText());
+                    }
+                }
+            }
+            if (!names.isEmpty()) {
+                return String.join(", ", names);
+            }
+        }
+        return "Unknown";
+    }
+
+    private String extractStudio(JsonNode item) {
+        if (item.has("Studios") && item.get("Studios").isArray()) {
+            List<String> studioNames = new ArrayList<>();
+            for (JsonNode studio : item.get("Studios")) {
+                if (studio.has("Name")) {
+                    studioNames.add(studio.get("Name").asText());
+                }
+            }
+            if (!studioNames.isEmpty()) {
+                return String.join(", ", studioNames);
+            }
+        }
+        return "Unknown Studio";
+    }
+
     public String ping() {
         return movieData.ping();
     }
@@ -361,6 +494,9 @@ public class MovieBusiness {
             ExceptionUtils.throwException(422, "Movie Language Empty");
         if(movie.thumbnail == null || movie.thumbnail.isEmpty())
             ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
+        if(movie.streamId == null || movie.streamId.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Stream ID Empty");
+
         return movieData.postMovie(movie);
     }
 
@@ -398,6 +534,8 @@ public class MovieBusiness {
             ExceptionUtils.throwException(422, "Movie Language Empty");
         if (updatedMovie.thumbnail == null || updatedMovie.thumbnail.isEmpty())
             ExceptionUtils.throwException(422, "Movie Thumbnail Empty");
+        if (updatedMovie.streamId == null || updatedMovie.streamId.isEmpty())
+            ExceptionUtils.throwException(422, "Movie Stream ID Empty");
 
         return movieData.updateMovieByMovieId(id, updatedMovie);
     }

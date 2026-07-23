@@ -27,6 +27,7 @@ const form = ref({
   year: '',
   movieLength: '',
   thumbnail: '',
+  streamId: '',
   tagIds: []
 })
 
@@ -83,6 +84,7 @@ function validateForm() {
   if (!form.value.studio.trim()) return 'Studio is required.'
   if (!form.value.language.trim()) return 'Language is required.'
   if (!form.value.thumbnail.trim()) return 'Thumbnail URL is required.'
+  if (!form.value.streamId.trim()) return 'Stream ID is required.'
   if (!form.value.year || Number(form.value.year) < 0) return 'A valid year is required.'
   if (!form.value.movieLength || Number(form.value.movieLength) < 0) {
     return 'A valid movie length is required.'
@@ -116,6 +118,7 @@ async function createMovie() {
       year: Number(form.value.year),
       movieLength: Number(form.value.movieLength),
       thumbnail: form.value.thumbnail.trim(),
+      streamId: form.value.streamId.trim(),
 
       // Existing shared tag IDs only — this does not edit tag names.
       tags: form.value.tagIds.map(id => ({ id }))
@@ -313,6 +316,19 @@ function goBack() {
                         min="0"
                         class="field-input"
                         placeholder="120"
+                    />
+                  </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <div class="form-group-dark">
+                    <label for="streamId" class="field-label">Stream ID</label>
+                    <input
+                        id="streamId"
+                        v-model="form.streamId"
+                        type="text"
+                        class="field-input"
+                        placeholder="Jellyfin Item ID / Stream ID"
                     />
                   </div>
                 </div>

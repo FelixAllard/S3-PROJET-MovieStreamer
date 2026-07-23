@@ -18,6 +18,8 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
     public String title;
+
+    @Column(columnDefinition = "TEXT")
     public String description;
 
     @ManyToMany
@@ -32,11 +34,13 @@ public class Movie {
     public int year;
     public float movieLength;
 
+    @Column(columnDefinition = "TEXT")
     public String thumbnail;
     public String director;
     public String writer;
     public String studio;
     public String language;
+    @Column(columnDefinition = "TEXT")
     public String streamId;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
